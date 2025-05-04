@@ -4,21 +4,30 @@ import openai
 import os
 from dotenv import load_dotenv
 from flask_cors import CORS
+import logging
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = Flask(__name__)
-# CORS específico para tu frontend
 CORS(app, origins=["https://03.cl"])
+
+# Habilita logging
+logging.basicConfig(level=logging.INFO)
 
 @app.route('/', methods=['POST'])
 def analyze():
-    data = request.get_json()
-    url = data.get('url')
-
     try:
+        data = request.get_json()
+        if not data or 'url' not in data:
+            logging.error("No se proporcionó una URL válida.")
+            return jsonify({'error': 'No se proporcionó una URL válida.'}), 400
+
+        url = data['url']
+        logging.info(f"Recibida URL: {url}")
+
         seo_data = extract_seo_data(url)
+        logging.info("Datos SEO extraídos correctamente")
 
         prompt = (
             "Analiza el siguiente contenido HTML desde una perspectiva SEO y "
@@ -34,6 +43,7 @@ def analyze():
         )
 
         gpt_output = response['choices'][0]['message']['content']
+        logging.info("Respuesta GPT recibida correctamente")
 
         return jsonify({
             'seo_summary': gpt_output,
@@ -41,5 +51,7 @@ def analyze():
         })
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        logging.exception("Error interno al procesar la solicitud:")
+        return jsonify({'error': 'Error interno del servidor.'}), 500
+
 
