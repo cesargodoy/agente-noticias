@@ -9,7 +9,8 @@ load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = Flask(__name__)
-CORS(app)
+# CORS específico para tu frontend
+CORS(app, origins=["https://03.cl"])
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
@@ -41,3 +42,4 @@ def analyze():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
