@@ -1,0 +1,15 @@
+{
+  "name": "analizador-seo",
+  "version": "1.0.0",
+  "description": "Backend para analizar sitios web y proporcionar recomendaciones SEO utilizando ChatGPT",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^0.27.2",
+    "cheerio": "^1.0.0-rc.10",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.1"
+  }
+}
