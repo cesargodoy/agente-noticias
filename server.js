@@ -45,7 +45,7 @@ app.post('/', async (req, res) => {
 
     const recomendaciones = openaiResponse.data.choices[0].message.content.trim();
     res.json({ recomendaciones });
-  } } catch (error) {
+  } catch (error) {
   if (error.response) {
     // Error específico de OpenAI u otra API
     console.error("❌ Error OpenAI:", JSON.stringify(error.response.data, null, 2));
