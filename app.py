@@ -6,13 +6,15 @@ from dotenv import load_dotenv
 from flask_cors import CORS
 import logging
 
-# Cargar clave de API desde .env
+# Cargar la clave de OpenAI
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# Configurar Flask y CORS
 app = Flask(__name__)
-CORS(app, origins=["https://03.cl"])
+
+# Configuración CORS compatible con preflight y POST
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "https://03.cl"}})
+
 logging.basicConfig(level=logging.INFO)
 
 @app.route('/', methods=['POST'])
@@ -25,11 +27,11 @@ def analyze():
         url = data['url']
         logging.info(f"URL recibida para análisis: {url}")
 
-        # Scraping
+        # Scraping del sitio
         seo_data = extract_seo_data(url)
         logging.info("✅ Scraping realizado correctamente")
 
-        # Preparar prompt
+        # Crear prompt para GPT
         prompt = (
             "Analiza el siguiente contenido HTML desde una perspectiva SEO y "
             "genera recomendaciones prácticas para mejorar la visibilidad en buscadores. "
@@ -45,7 +47,7 @@ def analyze():
         )
 
         gpt_output = response['choices'][0]['message']['content']
-        logging.info("✅ Respuesta de GPT recibida")
+        logging.info("✅ GPT-4 respondió correctamente")
 
         return jsonify({
             'seo_summary': gpt_output,
@@ -54,5 +56,4 @@ def analyze():
 
     except Exception as e:
         logging.exception("❌ Error durante análisis SEO:")
-        # Muestra el mensaje de error para depuración (¡NO dejar esto en producción!)
         return jsonify({'error': str(e)}), 500
