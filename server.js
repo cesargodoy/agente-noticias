@@ -7,7 +7,7 @@ require('dotenv').config();
 const app = express();
 app.use(express.json());
 app.use(cors());
-app.post('https://redactor.onrender.com/', async (req, res) => {
+app.post('/', async (req, res) => {
   const { url } = req.body;
   
   try {
