@@ -45,10 +45,17 @@ app.post('/', async (req, res) => {
 
     const recomendaciones = openaiResponse.data.choices[0].message.content.trim();
     res.json({ recomendaciones });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error al analizar el sitio' });
+  } } catch (error) {
+  if (error.response) {
+    // Error específico de OpenAI u otra API
+    console.error("❌ Error OpenAI:", JSON.stringify(error.response.data, null, 2));
+    res.status(500).json({ error: error.response.data });
+  } else {
+    // Error de red, sintaxis u otros
+    console.error("❌ Error general:", error.message);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
+}
 });
 
 const PORT = process.env.PORT || 3000;
