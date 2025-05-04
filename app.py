@@ -6,15 +6,16 @@ from dotenv import load_dotenv
 from flask_cors import CORS
 import logging
 
-# Cargar la clave de OpenAI
+# Cargar clave de OpenAI desde .env
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = Flask(__name__)
 
-# Configuración CORS compatible con preflight y POST
+# CORS con soporte para preflight
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "https://03.cl"}})
 
+# Configurar logs
 logging.basicConfig(level=logging.INFO)
 
 @app.route('/', methods=['POST'])
@@ -25,13 +26,11 @@ def analyze():
             return jsonify({'error': 'No se proporcionó una URL válida'}), 400
 
         url = data['url']
-        logging.info(f"URL recibida para análisis: {url}")
+        logging.info(f"🔍 Analizando URL: {url}")
 
-        # Scraping del sitio
         seo_data = extract_seo_data(url)
-        logging.info("✅ Scraping realizado correctamente")
+        logging.info("✅ Scraping exitoso")
 
-        # Crear prompt para GPT
         prompt = (
             "Analiza el siguiente contenido HTML desde una perspectiva SEO y "
             "genera recomendaciones prácticas para mejorar la visibilidad en buscadores. "
@@ -39,15 +38,14 @@ def analyze():
             f"Contenido: {seo_data['text_sample']}"
         )
 
-        # Llamada a OpenAI
         response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-3.5-turbo",  # ✅ CAMBIO AQUÍ
             messages=[{"role": "user", "content": prompt}],
             max_tokens=800
         )
 
         gpt_output = response['choices'][0]['message']['content']
-        logging.info("✅ GPT-4 respondió correctamente")
+        logging.info("✅ GPT respondió correctamente")
 
         return jsonify({
             'seo_summary': gpt_output,
@@ -55,5 +53,5 @@ def analyze():
         })
 
     except Exception as e:
-        logging.exception("❌ Error durante análisis SEO:")
+        logging.exception("❌ Error en análisis SEO:")
         return jsonify({'error': str(e)}), 500
