@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
-app.use(cors());
+app.use(cors({
+  origin: 'https://03.cl'
+}));
 const axios = require('axios');
 const cheerio = require('cheerio');
 require('dotenv').config();
