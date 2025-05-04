@@ -7,9 +7,9 @@ require('dotenv').config();
 const app = express();
 app.use(express.json());
 app.use(cors());
-app.post('/analizar', async (req, res) => {
+app.post('https://redactor.onrender.com/', async (req, res) => {
   const { url } = req.body;
-
+  
   try {
     // Realizar scraping del sitio
     const { data: html } = await axios.get(url);
