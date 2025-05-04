@@ -12,7 +12,7 @@ app = Flask(__name__)
 # CORS específico para tu frontend
 CORS(app, origins=["https://03.cl"])
 
-@app.route('/analyze', methods=['POST'])
+@app.route('/', methods=['POST'])
 def analyze():
     data = request.get_json()
     url = data.get('url')
