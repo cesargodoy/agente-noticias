@@ -1,15 +1,12 @@
 const express = require('express');
 const cors = require('cors');
-app.use(cors({
-  origin: 'https://03.cl'
-}));
 const axios = require('axios');
 const cheerio = require('cheerio');
 require('dotenv').config();
 
 const app = express();
 app.use(express.json());
-
+app.use(cors());
 app.post('/analizar', async (req, res) => {
   const { url } = req.body;
 
