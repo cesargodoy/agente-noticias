@@ -14,8 +14,26 @@ def analyze():
     try:
         data = request.get_json()
         url = data.get("url")
-        if not url:
-            return jsonify({"error": "No se proporcionó una URL."}), 400
+        manual_text = data.get("manual_text")
+
+        if not url and not manual_text:
+            return jsonify({"error": "No se proporcionó ni una URL ni texto manual."}), 400
+
+        if manual_text:
+            prompt = (
+                "Analiza el siguiente texto desde una perspectiva de redacción y SEO. Sugiere mejoras claras en estructura, "
+                "palabras clave, claridad, legibilidad y formato web.\n"
+                f"Texto: {manual_text}"
+            )
+            gpt_response = openai.ChatCompletion.create(
+                model="gpt-4.1-mini",
+                messages=[
+                    {"role": "system", "content": "Eres un experto en redacción web y SEO."},
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            analysis = gpt_response.choices[0].message.content.strip()
+            return jsonify({"seo_summary": analysis})
 
         response = requests.get(url, timeout=10)
         soup = BeautifulSoup(response.text, 'html.parser')
