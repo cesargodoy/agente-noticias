@@ -4,11 +4,11 @@ const cheerio = require('cheerio');
 const cors = require('cors');
 
 const app = express();
-const port = process.env.PORT || 3000; // Render asignará un puerto dinámico
+const port = process.env.PORT || 3000;  // Render asignará un puerto dinámico
 
 // Habilitar CORS para permitir solicitudes desde https://03.cl
 app.use(cors({
-  origin: 'https://03.cl', // Cambia esto si tienes un subdominio o varios orígenes
+  origin: 'https://03.cl',  // Cambia esto si tienes un subdominio o varios orígenes
   methods: ['GET'],
 }));
 
@@ -39,7 +39,7 @@ app.get('/scrape', async (req, res) => {
   try {
     // Scraping de todas las páginas de forma paralela
     const scrapeResults = await Promise.all(urlsToScrape.map(url => scrapePage(url)));
-    res.json(scrapeResults); // Devuelve los resultados del scraping
+    res.json(scrapeResults);  // Devuelve los resultados del scraping
   } catch (error) {
     res.status(500).json({ error: 'Error al realizar el scraping' });
   }
