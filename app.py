@@ -1,61 +1,77 @@
 from flask import Flask, request, jsonify
-from seo_utils import extract_seo_data
-import openai
-import os
-from dotenv import load_dotenv
 from flask_cors import CORS
-import logging
+import requests
+from bs4 import BeautifulSoup
+import os
+import openai
 
-# Cargar la clave API desde el entorno
-load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
-# Inicializar la app Flask
 app = Flask(__name__)
-
-# Configurar CORS para permitir el dominio del frontend
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": "https://03.cl"}})
-
-# Configurar logs
-logging.basicConfig(level=logging.INFO)
+CORS(app)
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @app.route('/', methods=['POST'])
 def analyze():
     try:
         data = request.get_json()
-        if not data or 'url' not in data:
-            return jsonify({'error': 'No se proporcionó una URL válida'}), 400
+        url = data.get("url")
+        if not url:
+            return jsonify({"error": "No se proporcionó una URL."}), 400
 
-        url = data['url']
-        logging.info(f"🔍 Analizando URL: {url}")
+        response = requests.get(url, timeout=10)
+        soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Realizar scraping
-        seo_data = extract_seo_data(url)
-        logging.info("✅ Scraping exitoso")
+        title = soup.title.string.strip() if soup.title else ''
+        meta_desc = soup.find('meta', attrs={'name': 'description'})
+        meta_robots = soup.find('meta', attrs={'name': 'robots'})
+        meta_charset = soup.find('meta', charset=True)
+        h1_tags = soup.find_all('h1')
 
-        # Crear prompt para GPT
+        missing_tags = []
+        if not title:
+            missing_tags.append('title')
+        if not meta_desc:
+            missing_tags.append('meta name="description"')
+        if not meta_robots:
+            missing_tags.append('meta name="robots"')
+        if not meta_charset:
+            missing_tags.append('meta charset')
+        if not h1_tags:
+            missing_tags.append('h1')
+
+        visible_text = soup.get_text(separator=' ', strip=True)
+        word_count = len(visible_text.split())
+
+        headers = {
+            'title': title,
+            'h1': [h.get_text(strip=True) for h in h1_tags],
+        }
+
+        content_sample = visible_text[:1000]
         prompt = (
-            "Analiza el siguiente contenido HTML desde una perspectiva SEO y "
-            "genera recomendaciones prácticas para mejorar la visibilidad en buscadores. "
-            "Considera estructura, palabras clave, etiquetas, accesibilidad y velocidad de carga. "
-            f"Contenido: {seo_data['text_sample']}"
+            "Analiza el siguiente contenido HTML desde una perspectiva SEO y genera recomendaciones prácticas para mejorar "
+            "la visibilidad en buscadores. Considera estructura, palabras clave, etiquetas, accesibilidad y velocidad de carga.\n"
+            f"Contenido: {content_sample}"
         )
 
-        # Llamar a OpenAI con gpt-4.1-mini
-        response = openai.ChatCompletion.create(
-            model="gpt-4.1-mini",  # ← Asegúrate de tener acceso a este modelo
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=800
+        gpt_response = openai.ChatCompletion.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "Eres un experto en SEO."},
+                {"role": "user", "content": prompt}
+            ]
         )
 
-        gpt_output = response['choices'][0]['message']['content']
-        logging.info("✅ GPT respondió correctamente")
+        analysis = gpt_response.choices[0].message.content.strip()
 
         return jsonify({
-            'seo_summary': gpt_output,
-            'original_data': seo_data
+            "seo_summary": analysis,
+            "headers": headers,
+            "word_count": word_count,
+            "missing_tags": missing_tags
         })
 
     except Exception as e:
-        logging.exception("❌ Error durante el análisis SEO:")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
