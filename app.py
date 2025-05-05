@@ -1,55 +1,51 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS  # Importamos CORS
+from flask_cors import CORS  # Importa la extensión CORS
+import requests
+from bs4 import BeautifulSoup
+import openai
+import os
 
-# Inicializar Flask
 app = Flask(__name__)
 
-# Habilitar CORS para permitir solicitudes desde diferentes dominios
+# Habilitar CORS para todas las rutas
 CORS(app)
 
-# Función para simular una optimización SEO del texto
-def optimize_text(text):
-    # Aquí puedes agregar la lógica real de optimización SEO
-    optimized_text = text.replace("SEO", "SEO optimizado")  # Ejemplo simple
-    seo_summary = "Se han optimizado palabras clave, mejorado la legibilidad y añadido meta descripción."
-    return optimized_text, seo_summary
+# Tu clave API de OpenAI (GPT-4 mini) desde la variable de entorno
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
-# Función para simular el análisis SEO de una URL
-def analyze_url(url):
-    # Lógica para analizar una URL
-    seo_summary = "URL optimizada. Se encontró un buen uso de palabras clave."
-    optimized_text = "Texto optimizado para la URL."
-    funnel_analysis = "Análisis del funnel: Añadir más llamadas a la acción."
-    return optimized_text, seo_summary, funnel_analysis
+@app.route('/scrape', methods=['POST'])
+def scrape_and_analyze():
+    # Obtén la URL desde el cuerpo de la solicitud
+    url = request.json.get('url')
+    
+    if not url:
+        return jsonify({"error": "URL es requerida"}), 400
+    
+    # Realiza el scraping de la página
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        
+        # Usa BeautifulSoup para analizar el contenido HTML
+        soup = BeautifulSoup(response.text, 'html.parser')
+        content = soup.get_text()  # Extrae solo el texto
+        
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": f"Error al obtener la página: {str(e)}"}), 500
 
-# Ruta principal para procesar las solicitudes POST de la URL o el texto
-@app.route('/', methods=['POST'])
-def analyze():
-    data = request.get_json()  # Obtener los datos del cuerpo de la solicitud
+    # Llama a la API de GPT para analizar el contenido SEO
+    try:
+        analysis = openai.Completion.create(
+            model="gpt-4",  # Asegúrate de tener acceso al modelo GPT-4 mini
+            prompt=f"Analiza este contenido desde una perspectiva SEO y da recomendaciones: {content}",
+            max_tokens=500
+        )
+        seo_analysis = analysis.choices[0].text.strip()
+        
+    except Exception as e:
+        return jsonify({"error": f"Error al analizar con GPT-4: {str(e)}"}), 500
     
-    # Si la solicitud contiene una URL
-    if 'url' in data:
-        url = data['url']
-        optimized_text, seo_summary, funnel_analysis = analyze_url(url)
-        return jsonify({
-            'optimized_text': optimized_text,
-            'seo_summary': seo_summary,
-            'funnel_analysis': funnel_analysis
-        })
-    
-    # Si la solicitud contiene un texto
-    elif 'text' in data:
-        text = data['text']
-        optimized_text, seo_summary = optimize_text(text)
-        return jsonify({
-            'optimized_text': optimized_text,
-            'seo_summary': seo_summary,
-            'funnel_analysis': "Análisis del funnel: No aplicable para texto."
-        })
-    
-    # Si no se proporcionó ni URL ni texto
-    return jsonify({'error': 'No se proporcionó ni URL ni texto.'}), 400
+    return jsonify({"seo_analysis": seo_analysis})
 
-# Ejecutar la aplicación Flask
 if __name__ == '__main__':
     app.run(debug=True)
