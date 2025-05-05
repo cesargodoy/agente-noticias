@@ -4,4 +4,4 @@ beautifulsoup4==4.11.1
 openai==0.27.0
 flask-cors==2.1.0
 gunicorn==20.1.0
-werkzeug==2.1.2  # Establecer una versión compatible de werkzeug
+werkzeug==2.2.2  # Asegúrate de que werkzeug sea al menos 2.2.2
