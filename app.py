@@ -7,13 +7,23 @@ app = Flask(__name__)
 # Configuración de CORS para permitir solicitudes desde https://03.cl
 CORS(app, resources={r"/analyze/*": {"origins": "https://03.cl"}}, supports_credentials=True)
 
+# Asegurarse de que todas las rutas de preflight (OPTIONS) sean manejadas
+@app.after_request
+def after_request(response):
+    # Añadir encabezados CORS a todas las respuestas
+    response.headers['Access-Control-Allow-Origin'] = 'https://03.cl'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
+    return response
+
 # Manejo de la solicitud OPTIONS (para las solicitudes preflight CORS)
 @app.route('/analyze/<path:subpath>', methods=['OPTIONS'])
 def handle_options(subpath):
     return '', 204  # Responde con un código 204 a las solicitudes OPTIONS
 
-# Endpoints para el análisis de URL
-@app.route('/analyze/url', methods=['POST'])
+# Endpoint para el análisis de URL
+@app.route('/', methods=['POST'])
 def analyze_url():
     data = request.get_json()
     url = data.get('url')
@@ -49,7 +59,7 @@ def analyze_url():
     return jsonify(analysis_result)
 
 # Endpoint para el análisis de contenido manual
-@app.route('/analyze/text', methods=['POST'])
+@app.route('/', methods=['POST'])
 def analyze_text():
     data = request.get_json()
     text = data.get('text')
