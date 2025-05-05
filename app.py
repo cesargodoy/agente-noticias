@@ -16,12 +16,13 @@ def after_request(response):
     response.headers['Access-Control-Allow-Credentials'] = 'true'
     return response
 
-# Ruta para manejar las solicitudes OPTIONS
+# Asegurarse de que las rutas OPTIONS sean manejadas correctamente
 @app.route('/', methods=['OPTIONS'])
-def handle_options(subpath):
+def handle_options():
+    print("Preflight request received for /")
     return '', 204  # Responde con un código 204 a las solicitudes OPTIONS
 
-# Endpoint para el análisis de URL
+# Endpoint para el análisis de URL (raíz de la aplicación)
 @app.route('/', methods=['POST'])
 def analyze_url():
     data = request.get_json()
@@ -57,8 +58,8 @@ def analyze_url():
 
     return jsonify(analysis_result)
 
-# Endpoint para el análisis de contenido manual
-@app.route('/t', methods=['POST'])
+# Endpoint para el análisis de contenido manual (raíz de la aplicación)
+@app.route('/', methods=['POST'])
 def analyze_text():
     data = request.get_json()
     text = data.get('text')
