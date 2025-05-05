@@ -33,6 +33,17 @@ def analyze():
                 ]
             )
             analysis = gpt_response.choices[0].message.content.strip()
+            stop_phrases = [
+                "Si gustas, puedo ayudarte",
+                "¡Solo dime!",
+                "¿Quieres que lo reescriba?",
+                "Puedo generar una versión más optimizada"
+            ]
+            for phrase in stop_phrases:
+                if phrase in analysis:
+                    analysis = analysis.split(phrase)[0].strip()
+                    break
+
             return jsonify({"seo_summary": analysis})
 
         response = requests.get(url, timeout=10)
@@ -80,6 +91,16 @@ def analyze():
         )
 
         analysis = gpt_response.choices[0].message.content.strip()
+        stop_phrases = [
+            "Si gustas, puedo ayudarte",
+            "¡Solo dime!",
+            "¿Quieres que lo reescriba?",
+            "Puedo generar una versión más optimizada"
+        ]
+        for phrase in stop_phrases:
+            if phrase in analysis:
+                analysis = analysis.split(phrase)[0].strip()
+                break
 
         return jsonify({
             "seo_summary": analysis,
