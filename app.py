@@ -2,7 +2,6 @@ import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from bs4 import BeautifulSoup
-import re
 
 # Inicialización de la app Flask
 app = Flask(__name__)
@@ -22,7 +21,6 @@ def after_request(response):
 # Asegurarse de que las rutas OPTIONS sean manejadas correctamente
 @app.route('/', methods=['OPTIONS'])
 def handle_options():
-    print("Preflight request received for /")
     return '', 204  # Responde con un código 204 a las solicitudes OPTIONS
 
 # Función para analizar enlaces rotos
@@ -76,20 +74,17 @@ def html_semantics(url):
 # Endpoint para el análisis de URL (raíz de la aplicación)
 @app.route('/', methods=['POST'])
 def analyze_url():
-    data = request.get_json()
-    url = data.get('url')
+    data = request.get_json()  # Obtener el JSON del cuerpo de la solicitud
+    url = data.get('url')  # Obtener el parámetro 'url'
 
+    # Si no se proporciona una URL, devolver un error 400
     if not url:
         return jsonify({'error': 'URL is required'}), 400
     
     try:
-        # Realizar análisis SEO
+        # Realizar análisis SEO, enlaces rotos y semántica HTML
         seo_result = seo_analysis(url)
-        
-        # Verificar enlaces rotos
         broken_links = check_broken_links(url)
-        
-        # Analizar semántica HTML
         semantics = html_semantics(url)
         
         # Devolver los resultados en formato JSON
@@ -102,7 +97,8 @@ def analyze_url():
         return jsonify(result)
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"Error occurred: {e}")
+        return jsonify({'error': f"Server Error: {str(e)}"}), 500
 
 # Ejecutar la app de Flask
 if __name__ == '__main__':
