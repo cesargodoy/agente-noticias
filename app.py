@@ -1,105 +1,55 @@
-import requests
 from flask import Flask, request, jsonify
-from flask_cors import CORS
-from bs4 import BeautifulSoup
+from flask_cors import CORS  # Importamos CORS
 
-# Inicialización de la app Flask
+# Inicializar Flask
 app = Flask(__name__)
 
-# Configuración de CORS para permitir solicitudes desde https://03.cl y http://www.03.cl
-CORS(app, resources={r"/*": {"origins": ["https://03.cl", "http://www.03.cl"]}}, supports_credentials=True)
+# Habilitar CORS para permitir solicitudes desde diferentes dominios
+CORS(app)
 
-# Manejo de la solicitud OPTIONS (para las solicitudes preflight CORS)
-@app.after_request
-def after_request(response):
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
-    response.headers['Access-Control-Allow-Credentials'] = 'true'
-    return response
+# Función para simular una optimización SEO del texto
+def optimize_text(text):
+    # Aquí puedes agregar la lógica real de optimización SEO
+    optimized_text = text.replace("SEO", "SEO optimizado")  # Ejemplo simple
+    seo_summary = "Se han optimizado palabras clave, mejorado la legibilidad y añadido meta descripción."
+    return optimized_text, seo_summary
 
-# Asegurarse de que las rutas OPTIONS sean manejadas correctamente
-@app.route('/', methods=['OPTIONS'])
-def handle_options():
-    return '', 204  # Responde con un código 204 a las solicitudes OPTIONS
+# Función para simular el análisis SEO de una URL
+def analyze_url(url):
+    # Lógica para analizar una URL
+    seo_summary = "URL optimizada. Se encontró un buen uso de palabras clave."
+    optimized_text = "Texto optimizado para la URL."
+    funnel_analysis = "Análisis del funnel: Añadir más llamadas a la acción."
+    return optimized_text, seo_summary, funnel_analysis
 
-# Función para analizar enlaces rotos
-def check_broken_links(url):
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    links = soup.find_all('a', href=True)
-    broken_links = []
-
-    for link in links:
-        link_url = link['href']
-        if not link_url.startswith('http'):
-            continue  # Solo comprobar enlaces completos (no relativos)
-        try:
-            link_response = requests.head(link_url, allow_redirects=True)
-            if link_response.status_code != 200:
-                broken_links.append(link_url)
-        except requests.RequestException:
-            broken_links.append(link_url)
-
-    return broken_links
-
-# Función básica de análisis SEO
-def seo_analysis(url):
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    
-    title = soup.title.string if soup.title else 'No Title'
-    meta_description = ''
-    
-    meta_tag = soup.find('meta', {'name': 'description'})
-    if meta_tag and 'content' in meta_tag.attrs:
-        meta_description = meta_tag['content']
-    
-    return {
-        'title': title,
-        'meta_description': meta_description
-    }
-
-# Función de análisis de semántica HTML
-def html_semantics(url):
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    
-    # Verificar el uso de elementos semánticos básicos
-    elements = ['header', 'footer', 'main', 'article', 'section', 'nav']
-    used_elements = {element: len(soup.find_all(element)) > 0 for element in elements}
-    
-    return used_elements
-
-# Endpoint para el análisis de URL (raíz de la aplicación)
+# Ruta principal para procesar las solicitudes POST de la URL o el texto
 @app.route('/', methods=['POST'])
-def analyze_url():
-    data = request.get_json()  # Obtener el JSON del cuerpo de la solicitud
-    url = data.get('url')  # Obtener el parámetro 'url'
-
-    # Si no se proporciona una URL, devolver un error 400
-    if not url:
-        return jsonify({'error': 'URL is required'}), 400
+def analyze():
+    data = request.get_json()  # Obtener los datos del cuerpo de la solicitud
     
-    try:
-        # Realizar análisis SEO, enlaces rotos y semántica HTML
-        seo_result = seo_analysis(url)
-        broken_links = check_broken_links(url)
-        semantics = html_semantics(url)
-        
-        # Devolver los resultados en formato JSON
-        result = {
-            "SEO": seo_result,
-            "Broken Links": broken_links,
-            "HTML Semantics": semantics
-        }
+    # Si la solicitud contiene una URL
+    if 'url' in data:
+        url = data['url']
+        optimized_text, seo_summary, funnel_analysis = analyze_url(url)
+        return jsonify({
+            'optimized_text': optimized_text,
+            'seo_summary': seo_summary,
+            'funnel_analysis': funnel_analysis
+        })
+    
+    # Si la solicitud contiene un texto
+    elif 'text' in data:
+        text = data['text']
+        optimized_text, seo_summary = optimize_text(text)
+        return jsonify({
+            'optimized_text': optimized_text,
+            'seo_summary': seo_summary,
+            'funnel_analysis': "Análisis del funnel: No aplicable para texto."
+        })
+    
+    # Si no se proporcionó ni URL ni texto
+    return jsonify({'error': 'No se proporcionó ni URL ni texto.'}), 400
 
-        return jsonify(result)
-
-    except Exception as e:
-        print(f"Error occurred: {e}")
-        return jsonify({'error': f"Server Error: {str(e)}"}), 500
-
-# Ejecutar la app de Flask
+# Ejecutar la aplicación Flask
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True)
