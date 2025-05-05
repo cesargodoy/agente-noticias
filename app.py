@@ -1,116 +1,89 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import requests
-from bs4 import BeautifulSoup
-import os
-import openai
 
+# Inicialización de la app Flask
 app = Flask(__name__)
-CORS(app)
-openai.api_key = os.getenv("OPENAI_API_KEY")
 
-@app.route('/', methods=['POST'])
-def analyze():
-    try:
-        data = request.get_json()
-        url = data.get("url")
-        manual_text = data.get("manual_text")
+# Configuración de CORS para permitir solicitudes desde https://03.cl
+CORS(app, resources={r"/analyze/*": {"origins": "https://03.cl"}}, supports_credentials=True)
 
-        if not url and not manual_text:
-            return jsonify({"error": "No se proporcionó ni una URL ni texto manual."}), 400
+# Manejo de la solicitud OPTIONS (para las solicitudes preflight CORS)
+@app.route('/analyze/<path:subpath>', methods=['OPTIONS'])
+def handle_options(subpath):
+    return '', 204  # Responde con un código 204 a las solicitudes OPTIONS
 
-        if manual_text:
-            prompt = (
-                "Analiza el siguiente texto desde una perspectiva de redacción y SEO. Sugiere mejoras claras en estructura, "
-                "palabras clave, claridad, legibilidad y formato web.\n"
-                f"Texto: {manual_text}"
-            )
-            gpt_response = openai.ChatCompletion.create(
-                model="gpt-4.1-mini",
-                messages=[
-                    {"role": "system", "content": "Eres un experto en redacción web y SEO."},
-                    {"role": "user", "content": prompt}
-                ]
-            )
-            analysis = gpt_response.choices[0].message.content.strip()
-            stop_phrases = [
-                "Si gustas, puedo ayudarte",
-                "¡Solo dime!",
-                "¿Quieres que lo reescriba?",
-                "Puedo generar una versión más optimizada"
-            ]
-            for phrase in stop_phrases:
-                if phrase in analysis:
-                    analysis = analysis.split(phrase)[0].strip()
-                    break
+# Endpoints para el análisis de URL
+@app.route('/analyze/url', methods=['POST'])
+def analyze_url():
+    data = request.get_json()
+    url = data.get('url')
 
-            return jsonify({"seo_summary": analysis})
-
-        response = requests.get(url, timeout=10)
-        soup = BeautifulSoup(response.text, 'html.parser')
-
-        title = soup.title.string.strip() if soup.title else ''
-        meta_desc = soup.find('meta', attrs={'name': 'description'})
-        meta_robots = soup.find('meta', attrs={'name': 'robots'})
-        meta_charset = soup.find('meta', charset=True)
-        h1_tags = soup.find_all('h1')
-
-        missing_tags = []
-        if not title:
-            missing_tags.append('title')
-        if not meta_desc:
-            missing_tags.append('meta name="description"')
-        if not meta_robots:
-            missing_tags.append('meta name="robots"')
-        if not meta_charset:
-            missing_tags.append('meta charset')
-        if not h1_tags:
-            missing_tags.append('h1')
-
-        visible_text = soup.get_text(separator=' ', strip=True)
-        word_count = len(visible_text.split())
-
-        headers = {
-            'title': title,
-            'h1': [h.get_text(strip=True) for h in h1_tags],
+    # Lógica para analizar la URL (esto es solo un ejemplo, agrega tu lógica real aquí)
+    analysis_result = {
+        "SEO": {
+            "title": "Ejemplo de Título Optimizado",
+            "meta_description": "Esta es una descripción atractiva y rica en palabras clave."
+        },
+        "Palabras clave": {
+            "principales": ["SEO", "análisis", "optimización"],
+            "densidad": "Adecuada"
+        },
+        "Links rotos": {
+            "total": 0
+        },
+        "Semántica HTML": {
+            "correcto": True
+        },
+        "Accesibilidad": {
+            "imagenes_sin_alt": 0,
+            "contraste": "Cumple"
+        },
+        "CTAs": {
+            "total": 3
+        },
+        "Redacción para funnels": {
+            "estructura": "AIDA"
         }
+    }
 
-        content_sample = visible_text[:1000]
-        prompt = (
-            "Analiza el siguiente contenido HTML desde una perspectiva SEO y genera recomendaciones prácticas para mejorar "
-            "la visibilidad en buscadores. Considera estructura, palabras clave, etiquetas, accesibilidad y velocidad de carga.\n"
-            f"Contenido: {content_sample}"
-        )
+    return jsonify(analysis_result)
 
-        gpt_response = openai.ChatCompletion.create(
-            model="gpt-4.1-mini",
-            messages=[
-                {"role": "system", "content": "Eres un experto en SEO."},
-                {"role": "user", "content": prompt}
-            ]
-        )
+# Endpoint para el análisis de contenido manual
+@app.route('/analyze/text', methods=['POST'])
+def analyze_text():
+    data = request.get_json()
+    text = data.get('text')
 
-        analysis = gpt_response.choices[0].message.content.strip()
-        stop_phrases = [
-            "Si gustas, puedo ayudarte",
-            "¡Solo dime!",
-            "¿Quieres que lo reescriba?",
-            "Puedo generar una versión más optimizada"
-        ]
-        for phrase in stop_phrases:
-            if phrase in analysis:
-                analysis = analysis.split(phrase)[0].strip()
-                break
+    # Lógica para analizar el texto (esto es solo un ejemplo, agrega tu lógica real aquí)
+    analysis_result = {
+        "SEO": {
+            "title": "Ejemplo de Título Optimizado",
+            "meta_description": "Esta es una descripción atractiva y rica en palabras clave."
+        },
+        "Palabras clave": {
+            "principales": ["SEO", "análisis", "optimización"],
+            "densidad": "Adecuada"
+        },
+        "Links rotos": {
+            "total": 0
+        },
+        "Semántica HTML": {
+            "correcto": True
+        },
+        "Accesibilidad": {
+            "imagenes_sin_alt": 0,
+            "contraste": "Cumple"
+        },
+        "CTAs": {
+            "total": 3
+        },
+        "Redacción para funnels": {
+            "estructura": "AIDA"
+        }
+    }
 
-        return jsonify({
-            "seo_summary": analysis,
-            "headers": headers,
-            "word_count": word_count,
-            "missing_tags": missing_tags
-        })
+    return jsonify(analysis_result)
 
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
+# Ejecutar la app de Flask
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
