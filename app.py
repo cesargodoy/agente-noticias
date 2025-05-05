@@ -13,7 +13,7 @@ CORS(app)
 # Tu clave API de OpenAI (GPT-4 mini) desde la variable de entorno
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
-@app.route('/scrape', methods=['POST'])
+@app.route('/', methods=['POST'])
 def scrape_and_analyze():
     # Obtén la URL desde el cuerpo de la solicitud
     url = request.json.get('url')
