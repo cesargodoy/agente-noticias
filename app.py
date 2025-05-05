@@ -54,7 +54,7 @@ def analyze():
         )
 
         gpt_response = openai.ChatCompletion.create(
-            model="gpt-4o",
+            model="gpt-4.1-mini",
             messages=[
                 {"role": "system", "content": "Eres un experto en SEO."},
                 {"role": "user", "content": prompt}
