@@ -1,5 +1,8 @@
+import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from bs4 import BeautifulSoup
+import re
 
 # Inicialización de la app Flask
 app = Flask(__name__)
@@ -22,77 +25,84 @@ def handle_options():
     print("Preflight request received for /")
     return '', 204  # Responde con un código 204 a las solicitudes OPTIONS
 
+# Función para analizar enlaces rotos
+def check_broken_links(url):
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    links = soup.find_all('a', href=True)
+    broken_links = []
+
+    for link in links:
+        link_url = link['href']
+        if not link_url.startswith('http'):
+            continue  # Solo comprobar enlaces completos (no relativos)
+        try:
+            link_response = requests.head(link_url, allow_redirects=True)
+            if link_response.status_code != 200:
+                broken_links.append(link_url)
+        except requests.RequestException:
+            broken_links.append(link_url)
+
+    return broken_links
+
+# Función básica de análisis SEO
+def seo_analysis(url):
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
+    title = soup.title.string if soup.title else 'No Title'
+    meta_description = ''
+    
+    meta_tag = soup.find('meta', {'name': 'description'})
+    if meta_tag and 'content' in meta_tag.attrs:
+        meta_description = meta_tag['content']
+    
+    return {
+        'title': title,
+        'meta_description': meta_description
+    }
+
+# Función de análisis de semántica HTML
+def html_semantics(url):
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
+    # Verificar el uso de elementos semánticos básicos
+    elements = ['header', 'footer', 'main', 'article', 'section', 'nav']
+    used_elements = {element: len(soup.find_all(element)) > 0 for element in elements}
+    
+    return used_elements
+
 # Endpoint para el análisis de URL (raíz de la aplicación)
 @app.route('/', methods=['POST'])
 def analyze_url():
     data = request.get_json()
     url = data.get('url')
 
-    # Lógica para analizar la URL (esto es solo un ejemplo, agrega tu lógica real aquí)
-    analysis_result = {
-        "SEO": {
-            "title": "Ejemplo de Título Optimizado",
-            "meta_description": "Esta es una descripción atractiva y rica en palabras clave."
-        },
-        "Palabras clave": {
-            "principales": ["SEO", "análisis", "optimización"],
-            "densidad": "Adecuada"
-        },
-        "Links rotos": {
-            "total": 0
-        },
-        "Semántica HTML": {
-            "correcto": True
-        },
-        "Accesibilidad": {
-            "imagenes_sin_alt": 0,
-            "contraste": "Cumple"
-        },
-        "CTAs": {
-            "total": 3
-        },
-        "Redacción para funnels": {
-            "estructura": "AIDA"
+    if not url:
+        return jsonify({'error': 'URL is required'}), 400
+    
+    try:
+        # Realizar análisis SEO
+        seo_result = seo_analysis(url)
+        
+        # Verificar enlaces rotos
+        broken_links = check_broken_links(url)
+        
+        # Analizar semántica HTML
+        semantics = html_semantics(url)
+        
+        # Devolver los resultados en formato JSON
+        result = {
+            "SEO": seo_result,
+            "Broken Links": broken_links,
+            "HTML Semantics": semantics
         }
-    }
 
-    return jsonify(analysis_result)
+        return jsonify(result)
 
-# Endpoint para el análisis de contenido manual (raíz de la aplicación)
-@app.route('/', methods=['POST'])
-def analyze_text():
-    data = request.get_json()
-    text = data.get('text')
-
-    # Lógica para analizar el texto (esto es solo un ejemplo, agrega tu lógica real aquí)
-    analysis_result = {
-        "SEO": {
-            "title": "Ejemplo de Título Optimizado",
-            "meta_description": "Esta es una descripción atractiva y rica en palabras clave."
-        },
-        "Palabras clave": {
-            "principales": ["SEO", "análisis", "optimización"],
-            "densidad": "Adecuada"
-        },
-        "Links rotos": {
-            "total": 0
-        },
-        "Semántica HTML": {
-            "correcto": True
-        },
-        "Accesibilidad": {
-            "imagenes_sin_alt": 0,
-            "contraste": "Cumple"
-        },
-        "CTAs": {
-            "total": 3
-        },
-        "Redacción para funnels": {
-            "estructura": "AIDA"
-        }
-    }
-
-    return jsonify(analysis_result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # Ejecutar la app de Flask
 if __name__ == '__main__':
