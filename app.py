@@ -3,13 +3,13 @@ import requests
 import os
 from bs4 import BeautifulSoup
 from flask_cors import CORS
-import openai
+from openai import OpenAI
 
 app = Flask(__name__)
 CORS(app, resources={r"/": {"origins": "https://03.cl"}})
 
-# Configura tu API key desde las variables de entorno
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Cliente OpenAI (usa OPENAI_API_KEY desde entorno)
+client = OpenAI()
 
 def scrape_text(url):
     headers = {
@@ -28,9 +28,11 @@ def scrape_text(url):
                          'form', 'input', 'textarea', 'button', 'select', 'label']):
             tag.decompose()
 
-        # Eliminar todos los atributos de las etiquetas
         for tag in soup.find_all(True):
             tag.attrs = {}
+
+        for a in soup.find_all('a'):
+            a.attrs = {}
 
         body = soup.body
         if not body:
@@ -44,7 +46,7 @@ def scrape_text(url):
 
 def summarize_text_with_gpt(text):
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="o4-mini",
             messages=[
                 {"role": "system", "content": "Resumí claramente el siguiente texto en español."},
@@ -53,8 +55,7 @@ def summarize_text_with_gpt(text):
             temperature=0.7,
             max_tokens=600
         )
-        summary = response.choices[0].message.content.strip()
-        return summary
+        return response.choices[0].message.content.strip()
 
     except Exception as e:
         return f"Error al generar el resumen: {str(e)}"
