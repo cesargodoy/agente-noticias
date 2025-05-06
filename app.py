@@ -6,7 +6,7 @@ from flask_cors import CORS  # Importar CORS
 app = Flask(__name__)
 
 # Habilitar CORS para permitir solicitudes desde https://03.cl
-CORS(app, resources={r"/scrape": {"origins": "https://03.cl"}})  # Solo permitir solicitudes desde Hostgator
+CORS(app, resources={r"/": {"origins": "https://03.cl"}})  # Solo permitir solicitudes desde Hostgator
 
 # Función para hacer scraping de una URL
 def scrape_page(url):
