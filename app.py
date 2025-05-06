@@ -6,7 +6,7 @@ from flask_cors import CORS
 from openai import OpenAI
 
 app = Flask(__name__)
-CORS(app, resources={r"/": {"origins": "https://03.cl"}})
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 client = OpenAI()
 
@@ -21,8 +21,6 @@ def scrape_text_and_metadata(url):
             return None, f'Error al acceder a la URL (código {response.status_code})', None
 
         soup = BeautifulSoup(response.text, 'html.parser')
-
-        # Extraer metadatos del head
         head = soup.head
         metadata = {
             'title': head.title.string.strip() if head and head.title else None,
@@ -31,7 +29,8 @@ def scrape_text_and_metadata(url):
             'alt_tags': [],
             'title_attributes': [],
             'links': [],
-            'broken_links': []
+            'broken_links': [],
+            'keywords': []
         }
 
         desc_tag = head.find('meta', attrs={'name': 'description'})
@@ -42,7 +41,6 @@ def scrape_text_and_metadata(url):
         if canonical_tag and canonical_tag.get('href'):
             metadata['canonical'] = canonical_tag['href']
 
-        # Buscar alt en imágenes y title en cualquier tag
         for img in soup.find_all('img'):
             if img.get('alt'):
                 metadata['alt_tags'].append(img['alt'])
@@ -50,12 +48,10 @@ def scrape_text_and_metadata(url):
         for tag in soup.find_all(attrs={'title': True}):
             metadata['title_attributes'].append(tag['title'])
 
-        # Capturar enlaces
         links = soup.find_all('a', href=True)
         for a in links:
             href = a['href']
             metadata['links'].append(href)
-            # Validar enlaces HTTP/HTTPS
             if href.startswith('http'):
                 try:
                     res = requests.head(href, timeout=5)
@@ -64,7 +60,6 @@ def scrape_text_and_metadata(url):
                 except Exception:
                     metadata['broken_links'].append(href)
 
-        # Limpiar contenido
         for tag in soup(['script', 'style', 'video', 'audio', 'svg', 'form', 'input', 'textarea', 'button', 'select', 'label']):
             tag.decompose()
 
@@ -78,6 +73,15 @@ def scrape_text_and_metadata(url):
             full_text += head.get_text(separator="\n", strip=True) + "\n"
         if body:
             full_text += body.get_text(separator="\n", strip=True)
+
+        keyword_prompt = "Extrae una lista de palabras clave importantes del siguiente contenido web en español. Devuélvelas en formato JSON, como una lista."
+        keywords = ask_gpt(keyword_prompt, full_text)
+
+        try:
+            import json
+            metadata['keywords'] = json.loads(keywords)
+        except:
+            metadata['keywords'] = []
 
         return full_text.strip(), None, metadata
 
@@ -134,6 +138,19 @@ def summarize_and_analyze():
         'suggestions': suggestions,
         'metadata_info': metadata
     })
+
+@app.route('/optimize', methods=['POST'])
+def optimize_text():
+    data = request.get_json()
+    text = data.get('text', '').strip()
+    if not text:
+        return jsonify({'error': 'Falta el texto'}), 400
+
+    optimization_prompt = (
+        "Optimiza el siguiente texto para SEO. Mejora claridad, keywords, estructura y estilo. Responde solo con el texto mejorado, en español."
+    )
+    optimized = ask_gpt(optimization_prompt, text)
+    return jsonify({'optimized': optimized})
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
