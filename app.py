@@ -27,7 +27,6 @@ def scrape_text(url):
                          'form', 'input', 'textarea', 'button', 'select', 'label']):
             tag.decompose()
 
-        # Limpiar atributos de todas las etiquetas
         for tag in soup.find_all(True):
             tag.attrs = {}
         for a in soup.find_all('a'):
@@ -43,24 +42,23 @@ def scrape_text(url):
     except Exception as e:
         return None, str(e)
 
-def summarize_text_with_gpt(text):
+def ask_gpt(prompt, content):
     try:
         response = client.chat.completions.create(
             model="gpt-4.1-mini",
             messages=[
-                {"role": "system", "content": "Resumí claramente el siguiente texto en español."},
-                {"role": "user", "content": text}
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": content}
             ],
             temperature=0.7,
-            max_tokens=600
+            max_tokens=900
         )
         return response.choices[0].message.content.strip()
-
     except Exception as e:
-        return f"Error al generar el resumen: {str(e)}"
+        return f"Error: {str(e)}"
 
 @app.route('/')
-def summarize_scraped_url():
+def summarize_and_analyze():
     url = request.args.get('url')
     if not url:
         return jsonify({'error': 'Falta la URL'}), 400
@@ -69,8 +67,31 @@ def summarize_scraped_url():
     if error:
         return jsonify({'error': error}), 500
 
-    summary = summarize_text_with_gpt(text)
-    return jsonify({'summary': summary})
+    # Generar resumen
+    summary_prompt = "Resumí claramente el siguiente texto en español."
+    summary = ask_gpt(summary_prompt, text)
+
+    # Generar análisis SEO
+    seo_prompt = (
+        "Evalúa el siguiente contenido web en términos de SEO usando estos criterios:\n\n"
+        "1. Calidad del contenido\n"
+        "   - Relevancia\n   - Originalidad\n   - Claridad y legibilidad\n   - Precisión\n   - Autoridad\n   - Atractivo\n"
+        "2. Estructura\n"
+        "   - Títulos y subtítulos\n   - Párrafos\n   - Listas y viñetas\n   - Sintaxis general\n"
+        "3. Keywords\n"
+        "   - Relevancia\n   - Uso adecuado\n"
+        "4. Enlaces\n"
+        "   - Enlaces internos\n   - Enlaces externos\n   - Texto anclaje\n"
+        "5. Experiencia de usuario\n"
+        "   - Accesibilidad\n   - Uso de alt en imágenes (si aplica)\n\n"
+        "Entrega un informe estructurado punto por punto y comenta brevemente cada aspecto."
+    )
+    seo_report = ask_gpt(seo_prompt, text)
+
+    return jsonify({
+        'summary': summary,
+        'seo_report': seo_report
+    })
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
