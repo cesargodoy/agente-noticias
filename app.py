@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import requests
 from bs4 import BeautifulSoup
 from flask_cors import CORS  # Importar CORS
@@ -10,30 +10,37 @@ CORS(app, resources={r"/": {"origins": "https://03.cl"}})  # Solo permitir solic
 
 # Función para hacer scraping de una URL
 def scrape_page(url):
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+    
     try:
-        # Hacemos una solicitud GET a la URL
-        response = requests.get(url)
+        # Hacemos la solicitud GET a la URL con los encabezados
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # Lanza una excepción si la respuesta HTTP es un error (404, 500, etc.)
+
         # Usamos BeautifulSoup para parsear el HTML
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # Buscamos el primer título <h1> en la página
-        title = soup.find('h1').text if soup.find('h1') else 'Título no encontrado'
-        return {'url': url, 'title': title}
-    except Exception as e:
+        # Buscamos en <h1>, <h2>, y <title> para obtener un título
+        title = soup.find('h1') or soup.find('h2') or soup.title
+        title_text = title.text if title else 'Título no encontrado'
+        return {'url': url, 'title': title_text}
+    except requests.exceptions.RequestException as e:
         return {'url': url, 'error': str(e)}
 
-# Ruta para hacer scraping de varias páginas
+# Ruta para hacer scraping de una URL proporcionada por el usuario (raíz '/')
 @app.route('/')
 def scrape():
-    # Lista de URLs a scrapear
-    urls = ['https://example1.com', 'https://example2.com', 'https://example3.com']
+    url = request.args.get('url')  # Obtener la URL del parámetro de consulta
+
+    if not url:
+        return jsonify({'error': 'URL no proporcionada'}), 400  # Si no se proporciona la URL, devolvemos un error
     
-    # Realizamos el scraping para cada URL y almacenamos los resultados
-    results = [scrape_page(url) for url in urls]
-    
-    # Devolvemos los resultados en formato JSON
-    return jsonify(results)
+    result = scrape_page(url)  # Realizar el scraping de la URL proporcionada
+    return jsonify([result])  # Devolvemos los resultados en formato JSON
 
 if __name__ == '__main__':
     # Iniciamos el servidor en el puerto 5000, accesible desde cualquier IP
     app.run(debug=True, host='0.0.0.0', port=5000)
+
