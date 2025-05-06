@@ -22,12 +22,22 @@ def scrape_page(url):
         # Usamos BeautifulSoup para parsear el HTML
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # Eliminar los menús y otros elementos no deseados como <nav>, <header>, <footer>, <aside>
-        for unwanted_tag in soup(['nav', 'header', 'footer', 'aside']):
-            unwanted_tag.decompose()  # Elimina el tag de la página
+        # Intentamos encontrar el contenido principal de la página
+        # Dependiendo de la estructura de la página, buscaremos las siguientes etiquetas comunes:
+        content = None
 
-        # Extraer el texto de la página y dar formato (convertir <p>, <br>, etc. en texto legible)
-        page_text = soup.get_text(separator="\n", strip=True)  # Extrae el texto de toda la página
+        # Buscar en las etiquetas <main>, <article>, o cualquier clase común que contenga el contenido principal
+        content = soup.find(['main', 'article', 'section', 'div'], class_='content')
+
+        # Si no se encuentra en esas etiquetas, intentar con otras comunes
+        if not content:
+            content = soup.find(['div', 'section'], {'class': ['post', 'entry', 'content', 'text']})
+
+        # Si encontramos el contenido, extraemos el texto
+        if content:
+            page_text = content.get_text(separator="\n", strip=True)
+        else:
+            page_text = "Contenido no encontrado"
         
         return {'url': url, 'text': page_text}
     
