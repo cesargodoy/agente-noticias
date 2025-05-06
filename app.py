@@ -25,10 +25,10 @@ def scrape_page(url):
         # Usamos BeautifulSoup para parsear el HTML
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # Extraemos TODO el texto de la página sin limitaciones
-        page_text = soup.get_text(separator="\n", strip=True)  # Extrae el texto de toda la página
+        # Extraemos TODO el HTML de la página
+        page_html = soup.prettify()  # Usamos prettify para darle formato al HTML
 
-        return {'url': url, 'text': page_text}
+        return {'url': url, 'html': page_html}
     
     except requests.exceptions.RequestException as e:
         # Manejo de excepciones (problemas con la conexión, timeout, etc.)
