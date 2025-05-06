@@ -25,18 +25,24 @@ def scrape_page(url):
         # Usamos BeautifulSoup para parsear el HTML
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Eliminar las imágenes y otros elementos multimedia (como <video>, <audio>, etc.)
-        for img in soup.find_all('img'):
-            img.decompose()  # Elimina la etiqueta <img> del HTML
+        # Eliminar el contenido CSS, JavaScript y multimedia (imágenes, videos)
+        for script in soup.find_all('script'):  # Eliminar todas las etiquetas <script>
+            script.decompose()
 
-        for video in soup.find_all('video'):
-            video.decompose()  # Elimina las etiquetas <video>
+        for style in soup.find_all('style'):  # Eliminar todas las etiquetas <style>
+            style.decompose()
 
-        for audio in soup.find_all('audio'):
-            audio.decompose()  # Elimina las etiquetas <audio>
+        for img in soup.find_all('img'):  # Eliminar todas las imágenes <img>
+            img.decompose()
 
-        # Extraemos el HTML formateado, manteniendo las etiquetas de texto como <h1>, <h2>, <p>, etc.
-        page_html = soup.prettify()  # Usamos prettify para darle formato al HTML
+        for video in soup.find_all('video'):  # Eliminar todos los videos
+            video.decompose()
+
+        for audio in soup.find_all('audio'):  # Eliminar todos los audios
+            audio.decompose()
+
+        # Extraemos el HTML formateado, manteniendo solo el contenido de texto
+        page_html = soup.prettify()  # Usamos prettify para darle formato al HTML (pero sin imágenes ni scripts)
 
         return {'url': url, 'html': page_html}
     
