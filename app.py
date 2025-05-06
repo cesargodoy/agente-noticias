@@ -22,10 +22,11 @@ def scrape_page(url):
         # Usamos BeautifulSoup para parsear el HTML
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # Extraer el texto de las etiquetas <p>, <h1>, <h2>, <title> y otras relevantes
-        paragraphs = soup.find_all(['p', 'h1', 'h2', 'h3', 'span', 'li'])
-        page_text = ' '.join([para.get_text() for para in paragraphs])  # Unir el texto de las etiquetas
-        page_text = page_text[:1500]  # Limitar el texto extraído (1500 caracteres)
+        # Extraer el texto de la página y dar formato (convertir <p>, <br>, etc. en texto legible)
+        page_text = soup.get_text(separator="\n", strip=True)  # Extrae el texto de toda la página
+
+        # Limitar el texto extraído (1500 caracteres)
+        page_text = page_text[:1500]
 
         return {'url': url, 'text': page_text}
     
@@ -44,4 +45,5 @@ def scrape():
     return jsonify(result)  # Devolvemos los resultados en formato JSON
 
 if __name__ == '__main__':
+    # Iniciamos el servidor en el puerto 5000, accesible desde cualquier IP
     app.run(debug=True, host='0.0.0.0', port=5000)
