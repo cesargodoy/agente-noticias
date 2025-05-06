@@ -23,7 +23,7 @@ def scrape_page(url):
         return {'url': url, 'error': str(e)}
 
 # Ruta para hacer scraping de varias páginas
-@app.route('/scrape')
+@app.route('/')
 def scrape():
     # Lista de URLs a scrapear
     urls = ['https://example1.com', 'https://example2.com', 'https://example3.com']
