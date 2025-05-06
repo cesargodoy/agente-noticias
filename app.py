@@ -10,7 +10,7 @@ CORS(app, resources={r"/": {"origins": "https://03.cl"}})
 
 client = OpenAI()
 
-def scrape_text(url):
+def scrape_text_and_metadata(url):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
@@ -18,12 +18,38 @@ def scrape_text(url):
     try:
         response = requests.get(url, headers=headers, timeout=15)
         if response.status_code != 200:
-            return None, f'Error al acceder a la URL (código {response.status_code})'
+            return None, f'Error al acceder a la URL (código {response.status_code})', None
 
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        for tag in soup(['script', 'style', 'img', 'video', 'audio', 'svg',
-                         'form', 'input', 'textarea', 'button', 'select', 'label']):
+        # Extraer metadatos del head
+        head = soup.head
+        metadata = {
+            'title': head.title.string.strip() if head and head.title else None,
+            'description': None,
+            'canonical': None,
+            'alt_tags': [],
+            'title_attributes': []
+        }
+
+        desc_tag = head.find('meta', attrs={'name': 'description'})
+        if desc_tag and desc_tag.get('content'):
+            metadata['description'] = desc_tag['content']
+
+        canonical_tag = head.find('link', attrs={'rel': 'canonical'})
+        if canonical_tag and canonical_tag.get('href'):
+            metadata['canonical'] = canonical_tag['href']
+
+        # Buscar alt en imágenes y title en cualquier tag
+        for img in soup.find_all('img'):
+            if img.get('alt'):
+                metadata['alt_tags'].append(img['alt'])
+
+        for tag in soup.find_all(attrs={'title': True}):
+            metadata['title_attributes'].append(tag['title'])
+
+        # Limpiar contenido
+        for tag in soup(['script', 'style', 'video', 'audio', 'svg', 'form', 'input', 'textarea', 'button', 'select', 'label']):
             tag.decompose()
 
         for tag in soup.find_all(True):
@@ -32,14 +58,16 @@ def scrape_text(url):
             a.attrs = {}
 
         body = soup.body
-        if not body:
-            return None, "No se encontró contenido en el body"
+        full_text = ''
+        if head:
+            full_text += head.get_text(separator="\n", strip=True) + "\n"
+        if body:
+            full_text += body.get_text(separator="\n", strip=True)
 
-        text = body.get_text(separator="\n", strip=True)
-        return text, None
+        return full_text.strip(), None, metadata
 
     except Exception as e:
-        return None, str(e)
+        return None, str(e), None
 
 def ask_gpt(prompt, content):
     try:
@@ -62,7 +90,7 @@ def summarize_and_analyze():
     if not url:
         return jsonify({'error': 'Falta la URL'}), 400
 
-    text, error = scrape_text(url)
+    text, error, metadata = scrape_text_and_metadata(url)
     if error:
         return jsonify({'error': error}), 500
 
@@ -88,7 +116,8 @@ def summarize_and_analyze():
     return jsonify({
         'summary': summary,
         'seo_report': seo_report,
-        'suggestions': suggestions
+        'suggestions': suggestions,
+        'metadata_info': metadata
     })
 
 if __name__ == '__main__':
