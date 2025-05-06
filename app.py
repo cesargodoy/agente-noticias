@@ -29,7 +29,9 @@ def scrape_text_and_metadata(url):
             'description': None,
             'canonical': None,
             'alt_tags': [],
-            'title_attributes': []
+            'title_attributes': [],
+            'links': [],
+            'broken_links': []
         }
 
         desc_tag = head.find('meta', attrs={'name': 'description'})
@@ -48,14 +50,27 @@ def scrape_text_and_metadata(url):
         for tag in soup.find_all(attrs={'title': True}):
             metadata['title_attributes'].append(tag['title'])
 
+        # Capturar enlaces
+        links = soup.find_all('a', href=True)
+        for a in links:
+            href = a['href']
+            metadata['links'].append(href)
+            # Validar enlaces HTTP/HTTPS
+            if href.startswith('http'):
+                try:
+                    res = requests.head(href, timeout=5)
+                    if res.status_code >= 400:
+                        metadata['broken_links'].append(href)
+                except Exception:
+                    metadata['broken_links'].append(href)
+
         # Limpiar contenido
         for tag in soup(['script', 'style', 'video', 'audio', 'svg', 'form', 'input', 'textarea', 'button', 'select', 'label']):
             tag.decompose()
 
         for tag in soup.find_all(True):
-            tag.attrs = {}
-        for a in soup.find_all('a'):
-            a.attrs = {}
+            if tag.name != 'a':
+                tag.attrs = {}
 
         body = soup.body
         full_text = ''
