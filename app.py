@@ -8,7 +8,6 @@ from openai import OpenAI
 app = Flask(__name__)
 CORS(app, resources={r"/": {"origins": "https://03.cl"}})
 
-# Cliente OpenAI (usa OPENAI_API_KEY desde entorno)
 client = OpenAI()
 
 def scrape_text(url):
@@ -23,14 +22,14 @@ def scrape_text(url):
 
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Eliminar elementos no deseados
+        # Eliminar contenido no textual
         for tag in soup(['script', 'style', 'img', 'video', 'audio', 'svg',
                          'form', 'input', 'textarea', 'button', 'select', 'label']):
             tag.decompose()
 
+        # Limpiar atributos de todas las etiquetas
         for tag in soup.find_all(True):
             tag.attrs = {}
-
         for a in soup.find_all('a'):
             a.attrs = {}
 
@@ -47,7 +46,7 @@ def scrape_text(url):
 def summarize_text_with_gpt(text):
     try:
         response = client.chat.completions.create(
-            model="o4-mini",
+            model="gpt-4.1-mini",
             messages=[
                 {"role": "system", "content": "Resumí claramente el siguiente texto en español."},
                 {"role": "user", "content": text}
