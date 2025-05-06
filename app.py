@@ -8,7 +8,7 @@ app = Flask(__name__)
 # Habilitar CORS para permitir solicitudes desde https://03.cl
 CORS(app, resources={r"/": {"origins": "https://03.cl"}})  # Solo permitir solicitudes desde Hostgator
 
-# Función para hacer scraping de una URL y extraer el texto
+# Función para hacer scraping de una URL proporcionada
 def scrape_page(url):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -22,13 +22,11 @@ def scrape_page(url):
         # Usamos BeautifulSoup para parsear el HTML
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # Extraer todo el texto dentro de los elementos <p> (párrafos) y otros elementos relevantes
-        paragraphs = soup.find_all(['p', 'h1', 'h2', 'h3', 'li', 'span'])  # Agregamos más etiquetas relevantes si es necesario
-        page_text = ' '.join([para.get_text() for para in paragraphs])  # Extraemos el texto de esos elementos y lo unimos
-        
-        # Limitar el texto extraído para no devolver contenido demasiado largo
-        page_text = page_text[:1500]  # Limitar a los primeros 1500 caracteres (puedes ajustar este número)
-        
+        # Extraer el texto de las etiquetas <p>, <h1>, <h2>, <title> y otras relevantes
+        paragraphs = soup.find_all(['p', 'h1', 'h2', 'h3', 'span', 'li'])
+        page_text = ' '.join([para.get_text() for para in paragraphs])  # Unir el texto de las etiquetas
+        page_text = page_text[:1500]  # Limitar el texto extraído (1500 caracteres)
+
         return {'url': url, 'text': page_text}
     
     except requests.exceptions.RequestException as e:
@@ -43,11 +41,7 @@ def scrape():
         return jsonify({'error': 'URL no proporcionada'}), 400  # Si no se proporciona la URL, devolvemos un error
     
     result = scrape_page(url)  # Realizar el scraping de la URL proporcionada
-    return jsonify([result])  # Devolvemos los resultados en formato JSON
+    return jsonify(result)  # Devolvemos los resultados en formato JSON
 
 if __name__ == '__main__':
-    # Iniciamos el servidor en el puerto 5000, accesible desde cualquier IP
     app.run(debug=True, host='0.0.0.0', port=5000)
-
-
-
