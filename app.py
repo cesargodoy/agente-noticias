@@ -22,13 +22,14 @@ def scrape_page(url):
         # Usamos BeautifulSoup para parsear el HTML
         soup = BeautifulSoup(response.text, 'html.parser')
         
+        # Extraer el HTML completo de la página
+        page_html = str(soup)  # Devolver el HTML completo de la página
+        
         # Extraer el texto de la página y dar formato (convertir <p>, <br>, etc. en texto legible)
         page_text = soup.get_text(separator="\n", strip=True)  # Extrae el texto de toda la página
+        page_text = page_text[:1500]  # Limitar el texto extraído (1500 caracteres)
 
-        # Limitar el texto extraído (1500 caracteres)
-        page_text = page_text[:1500]
-
-        return {'url': url, 'text': page_text}
+        return {'url': url, 'html': page_html, 'text': page_text}
     
     except requests.exceptions.RequestException as e:
         return {'url': url, 'error': str(e)}
