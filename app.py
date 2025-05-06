@@ -8,7 +8,7 @@ app = Flask(__name__)
 # Habilitar CORS para permitir solicitudes desde https://03.cl
 CORS(app, resources={r"/": {"origins": "https://03.cl"}})  # Solo permitir solicitudes desde Hostgator
 
-# Función para hacer scraping de una URL
+# Función para hacer scraping de una URL proporcionada
 def scrape_page(url):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -22,14 +22,14 @@ def scrape_page(url):
         # Usamos BeautifulSoup para parsear el HTML
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # Buscamos en <h1>, <h2>, y <title> para obtener un título
-        title = soup.find('h1') or soup.find('h2') or soup.title
+        # Buscar títulos en diferentes etiquetas comunes
+        title = soup.find('h1') or soup.find('h2') or soup.find('title') or soup.find('meta', {'name': 'title'})
         title_text = title.text if title else 'Título no encontrado'
         return {'url': url, 'title': title_text}
     except requests.exceptions.RequestException as e:
         return {'url': url, 'error': str(e)}
 
-# Ruta para hacer scraping de una URL proporcionada por el usuario (raíz '/')
+# Ruta para hacer scraping de cualquier URL proporcionada por el usuario (raíz '/')
 @app.route('/')
 def scrape():
     url = request.args.get('url')  # Obtener la URL del parámetro de consulta
@@ -43,4 +43,5 @@ def scrape():
 if __name__ == '__main__':
     # Iniciamos el servidor en el puerto 5000, accesible desde cualquier IP
     app.run(debug=True, host='0.0.0.0', port=5000)
+
 
