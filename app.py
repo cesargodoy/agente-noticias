@@ -25,17 +25,8 @@ def scrape_page(url):
         # Usamos BeautifulSoup para parsear el HTML
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # Intentamos encontrar el contenido principal de la página
-        content = None
-        content = soup.find(['main', 'article', 'section', 'div'], class_='content')
-
-        if not content:
-            content = soup.find(['div', 'section'], {'class': ['post', 'entry', 'content', 'text']})
-
-        if content:
-            page_text = content.get_text(separator="\n", strip=True)
-        else:
-            page_text = "Contenido principal no encontrado en la página"
+        # Extraemos TODO el texto de la página sin limitaciones
+        page_text = soup.get_text(separator="\n", strip=True)  # Extrae el texto de toda la página
 
         return {'url': url, 'text': page_text}
     
