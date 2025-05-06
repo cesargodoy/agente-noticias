@@ -22,7 +22,6 @@ def scrape_text(url):
 
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Eliminar contenido no textual
         for tag in soup(['script', 'style', 'img', 'video', 'audio', 'svg',
                          'form', 'input', 'textarea', 'button', 'select', 'label']):
             tag.decompose()
@@ -67,30 +66,29 @@ def summarize_and_analyze():
     if error:
         return jsonify({'error': error}), 500
 
-    # Generar resumen
-    summary_prompt = "Resumí claramente el siguiente texto en español."
-    summary = ask_gpt(summary_prompt, text)
+    summary = ask_gpt("Resumí claramente el siguiente texto en español.", text)
 
-    # Generar análisis SEO
     seo_prompt = (
         "Evalúa el siguiente contenido web en términos de SEO usando estos criterios:\n\n"
-        "1. Calidad del contenido\n"
-        "   - Relevancia\n   - Originalidad\n   - Claridad y legibilidad\n   - Precisión\n   - Autoridad\n   - Atractivo\n"
-        "2. Estructura\n"
-        "   - Títulos y subtítulos\n   - Párrafos\n   - Listas y viñetas\n   - Sintaxis general\n"
-        "3. Keywords\n"
-        "   - Relevancia\n   - Uso adecuado\n"
-        "4. Enlaces\n"
-        "   - Enlaces internos\n   - Enlaces externos\n   - Texto anclaje\n"
-        "5. Experiencia de usuario\n"
-        "   - Accesibilidad\n   - Uso de alt en imágenes (si aplica)\n\n"
-        "Entrega un informe estructurado punto por punto y comenta brevemente cada aspecto."
+        "1. Calidad del contenido (relevancia, originalidad, legibilidad, precisión, autoridad, atractivo)\n"
+        "2. Estructura (títulos, párrafos, listas, sintaxis)\n"
+        "3. Keywords (relevancia, uso adecuado)\n"
+        "4. Enlaces (internos, externos, texto anclaje)\n"
+        "5. Experiencia de usuario (accesibilidad, uso de alt en imágenes)\n\n"
+        "Entrega un informe estructurado en español."
     )
     seo_report = ask_gpt(seo_prompt, text)
 
+    suggestions_prompt = (
+        "Basado en el contenido web y en un análisis SEO previo, sugiere mejoras claras, prácticas y específicas "
+        "para optimizar esta página web en términos de SEO. Usa viñetas o numeración. Escribe en español."
+    )
+    suggestions = ask_gpt(suggestions_prompt, text)
+
     return jsonify({
         'summary': summary,
-        'seo_report': seo_report
+        'seo_report': seo_report,
+        'suggestions': suggestions
     })
 
 if __name__ == '__main__':
