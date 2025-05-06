@@ -17,32 +17,31 @@ def scrape_page(url):
     try:
         # Hacemos la solicitud GET a la URL con los encabezados
         response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Lanza una excepción si la respuesta HTTP es un error (404, 500, etc.)
+
+        # Verificar si la respuesta es exitosa (código 200)
+        if response.status_code != 200:
+            return {'error': f'No se puede acceder a la página. Código de error: {response.status_code}'}
 
         # Usamos BeautifulSoup para parsear el HTML
         soup = BeautifulSoup(response.text, 'html.parser')
         
         # Intentamos encontrar el contenido principal de la página
-        # Dependiendo de la estructura de la página, buscaremos las siguientes etiquetas comunes:
         content = None
-
-        # Buscar en las etiquetas <main>, <article>, o cualquier clase común que contenga el contenido principal
         content = soup.find(['main', 'article', 'section', 'div'], class_='content')
 
-        # Si no se encuentra en esas etiquetas, intentar con otras comunes
         if not content:
             content = soup.find(['div', 'section'], {'class': ['post', 'entry', 'content', 'text']})
 
-        # Si encontramos el contenido, extraemos el texto
         if content:
             page_text = content.get_text(separator="\n", strip=True)
         else:
-            page_text = "Contenido no encontrado"
-        
+            page_text = "Contenido principal no encontrado en la página"
+
         return {'url': url, 'text': page_text}
     
     except requests.exceptions.RequestException as e:
-        return {'url': url, 'error': str(e)}
+        # Manejo de excepciones (problemas con la conexión, timeout, etc.)
+        return {'error': f'Error de conexión: {str(e)}'}
 
 # Ruta para hacer scraping de una URL proporcionada por el usuario (raíz '/')
 @app.route('/')
