@@ -27,6 +27,10 @@ def scrape_page(url):
         for tag in soup.find_all(True):
             tag.attrs = {}
 
+        # Eliminar href de los enlaces <a> para que no sean clicables
+        for a in soup.find_all('a'):
+            a.attrs = {}
+
         # Extraer solo el contenido del body
         body = soup.body
         clean_html = body.prettify() if body else soup.prettify()
