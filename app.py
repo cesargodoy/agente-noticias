@@ -19,16 +19,17 @@ def scrape_page(url):
 
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Eliminar elementos no deseados
-        for tag in soup(['script', 'style', 'img', 'video', 'audio', 'svg']):
+        # Eliminar etiquetas no deseadas (scripts, estilos, multimedia y formularios)
+        for tag in soup(['script', 'style', 'img', 'video', 'audio', 'svg', 'form', 'input', 'textarea', 'button', 'select', 'label']):
             tag.decompose()
+
+        # Eliminar todos los atributos de todas las etiquetas
+        for tag in soup.find_all(True):
+            tag.attrs = {}
 
         # Extraer solo el contenido del body
         body = soup.body
-        if body:
-            clean_html = body.prettify()
-        else:
-            clean_html = soup.prettify()
+        clean_html = body.prettify() if body else soup.prettify()
 
         return {'url': url, 'html': clean_html}
 
