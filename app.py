@@ -22,8 +22,12 @@ def scrape_page(url):
         # Usamos BeautifulSoup para parsear el HTML
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # Extraer todo el texto de la página (sin límite)
-        page_text = soup.get_text(separator="\n", strip=True)  # Extrae todo el texto de la página
+        # Eliminar los menús y otros elementos no deseados como <nav>, <header>, <footer>, <aside>
+        for unwanted_tag in soup(['nav', 'header', 'footer', 'aside']):
+            unwanted_tag.decompose()  # Elimina el tag de la página
+
+        # Extraer el texto de la página y dar formato (convertir <p>, <br>, etc. en texto legible)
+        page_text = soup.get_text(separator="\n", strip=True)  # Extrae el texto de toda la página
         
         return {'url': url, 'text': page_text}
     
