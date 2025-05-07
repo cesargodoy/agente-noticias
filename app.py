@@ -3,7 +3,7 @@ from flask_cors import CORS
 from openai import OpenAI
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 client = OpenAI()
 
@@ -43,7 +43,6 @@ def generar_contenido():
     if not prompt:
         return jsonify({"error": "Tipo no válido"}), 400
 
-    # Agregar keywords al prompt si existen
     if kp or ks:
         prompt += "\n\nIncluye de forma natural estas palabras clave:"
         if kp:
