@@ -16,7 +16,7 @@ def ask_gpt(prompt, tema):
                 {"role": "user", "content": tema}
             ],
             temperature=0.7,
-            max_tokens=1000
+            max_tokens=1200
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
@@ -34,9 +34,24 @@ def generar_contenido():
         return jsonify({"error": "Faltan el tipo o tema"}), 400
 
     prompt_base = {
-        "landing": "Redacta una landing page con enfoque UX para un sitio público sobre: {tema}.",
-        "ctas": "Genera llamados a la acción (CTAs) claros, inclusivos y persuasivos para un sitio público sobre: {tema}.",
-        "uxscript": "Redacta microcopys UX breves y efectivos para una interfaz pública sobre: {tema}."
+        "landing": (
+            "Redacta una landing page profesional para un sitio público sobre: {tema}.\n\n"
+            "Debe seguir las mejores prácticas de SEO en español:\n"
+            "- Incluir un título H1 atractivo con al menos una keyword principal\n"
+            "- Usar subtítulos jerárquicos (H2, H3) para dividir secciones relevantes\n"
+            "- Incluir naturalmente todas las keywords principales y secundarias proporcionadas\n"
+            "- Usar frases claras, listas, bullets o numeraciones cuando aplique\n"
+            "- Incluir llamados a la acción (CTAs) apropiados para un sitio institucional\n"
+            "- Optimizar para legibilidad, claridad y accesibilidad (sin jergas innecesarias)\n"
+            "- Redactar una meta descripción sugerida de máximo 160 caracteres al final\n"
+            "- Evitar palabras vacías o contenido redundante"
+        ),
+        "ctas": (
+            "Genera llamados a la acción (CTAs) claros, inclusivos y persuasivos para un sitio público sobre: {tema}."
+        ),
+        "uxscript": (
+            "Redacta microcopys UX breves y efectivos para una interfaz pública sobre: {tema}."
+        )
     }
 
     prompt = prompt_base.get(tipo)
@@ -44,7 +59,7 @@ def generar_contenido():
         return jsonify({"error": "Tipo no válido"}), 400
 
     if kp or ks:
-        prompt += "\n\nIncluye de forma natural estas palabras clave:"
+        prompt += "\n\nPalabras clave a incluir:"
         if kp:
             prompt += f"\n- Principales: {', '.join(kp)}"
         if ks:
