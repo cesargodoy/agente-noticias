@@ -61,7 +61,10 @@ def generar_contenido():
         return jsonify({"error": "Tipo no válido"}), 400
 
     if kp or ks:
-        prompt += "\n\nPalabras clave a incluir de forma natural:"
+        prompt += (
+            "\n\nIntegrá las siguientes palabras clave de forma coherente y contextualizada en el texto, "
+            "como parte de frases naturales relacionadas con el tema. No las fuerces:"
+        )
         if kp:
             prompt += f"\n- Principales: {', '.join(kp)}"
         if ks:
