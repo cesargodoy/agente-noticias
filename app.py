@@ -36,21 +36,23 @@ def generar_contenido():
     prompt_base = {
         "landing": (
             "Redacta una landing page profesional para un sitio público sobre: {tema}.\n\n"
-            "Debe seguir las mejores prácticas de SEO en español:\n"
-            "- Incluir un título H1 atractivo con al menos una keyword principal\n"
-            "- Usar subtítulos jerárquicos (H2, H3) para dividir secciones relevantes\n"
-            "- Incluir naturalmente todas las keywords principales y secundarias proporcionadas\n"
-            "- Usar frases claras, listas, bullets o numeraciones cuando aplique\n"
-            "- Incluir llamados a la acción (CTAs) apropiados para un sitio institucional\n"
-            "- Optimizar para legibilidad, claridad y accesibilidad (sin jergas innecesarias)\n"
-            "- Redactar una meta descripción sugerida de máximo 160 caracteres al final\n"
-            "- Evitar palabras vacías o contenido redundante"
+            "Debe seguir las mejores prácticas de SEO en español.\n"
+            "- No uses etiquetas HTML en el contenido generado.\n"
+            "- Incluye encabezados, párrafos, listas o llamadas a la acción como texto normal.\n"
+            "- Al final del contenido, sugiere una estructura HTML apropiada (solo como lista), indicando:\n"
+            "  - Título principal (H1)\n"
+            "  - Subtítulos (H2, H3)\n"
+            "  - CTA (botón o enlace)\n"
+            "- También agrega una meta descripción sugerida (máximo 160 caracteres).\n"
+            "- Utiliza un estilo claro, accesible, bien redactado, y orientado a la acción."
         ),
         "ctas": (
-            "Genera llamados a la acción (CTAs) claros, inclusivos y persuasivos para un sitio público sobre: {tema}."
+            "Genera llamados a la acción (CTAs) claros, inclusivos y persuasivos para un sitio público sobre: {tema}.\n"
+            "No uses etiquetas HTML."
         ),
         "uxscript": (
-            "Redacta microcopys UX breves y efectivos para una interfaz pública sobre: {tema}."
+            "Redacta microcopys UX breves y efectivos para una interfaz pública sobre: {tema}.\n"
+            "No uses etiquetas HTML."
         )
     }
 
@@ -59,7 +61,7 @@ def generar_contenido():
         return jsonify({"error": "Tipo no válido"}), 400
 
     if kp or ks:
-        prompt += "\n\nPalabras clave a incluir:"
+        prompt += "\n\nPalabras clave a incluir de forma natural:"
         if kp:
             prompt += f"\n- Principales: {', '.join(kp)}"
         if ks:
