@@ -7,16 +7,16 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 
 client = OpenAI()
 
-def ask_gpt(prompt, tema):
+def ask_gpt(prompt, texto):
     try:
         response = client.chat.completions.create(
             model="gpt-4.1-mini",
             messages=[
                 {"role": "system", "content": prompt},
-                {"role": "user", "content": tema}
+                {"role": "user", "content": texto}
             ],
             temperature=0.7,
-            max_tokens=1200
+            max_tokens=800
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
@@ -69,6 +69,24 @@ def generar_contenido():
 
     contenido = ask_gpt(prompt, tema)
     return jsonify({"contenido": contenido})
+
+
+@app.route('/sugerencia', methods=['POST'])
+def sugerencia_parrafo():
+    data = request.get_json()
+    parrafo = data.get("parrafo", "").strip()
+
+    if not parrafo:
+        return jsonify({"error": "Falta el párrafo"}), 400
+
+    prompt = (
+        "Sugiere una mejor redacción para este párrafo en castellano chileno. "
+        "Mantén el significado, pero mejora el estilo, la claridad y la fluidez. "
+        "Devuelve solo el párrafo mejorado sin agregar explicaciones."
+    )
+
+    sugerencia = ask_gpt(prompt, parrafo)
+    return jsonify({"sugerencia": sugerencia})
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
