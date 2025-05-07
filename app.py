@@ -35,23 +35,20 @@ def generar_contenido():
 
     prompt_base = {
         "landing": (
-            "Redacta una landing page profesional para un sitio público sobre: {tema}.\n\n"
-            "Debe seguir las mejores prácticas de SEO en español.\n"
-            "- No uses etiquetas HTML en el contenido generado.\n"
-            "- Incluye encabezados, párrafos, listas o llamadas a la acción como texto normal.\n"
-            "- Al final del contenido, sugiere una estructura HTML apropiada (solo como lista), indicando:\n"
-            "  - Título principal (H1)\n"
-            "  - Subtítulos (H2, H3)\n"
-            "  - CTA (botón o enlace)\n"
-            "- También agrega una meta descripción sugerida (máximo 160 caracteres).\n"
-            "- Utiliza un estilo claro, accesible, bien redactado, y orientado a la acción."
+            "Redacta una landing page profesional en castellano chileno para un sitio público sobre: {tema}.\n\n"
+            "Debe seguir las mejores prácticas de SEO:\n"
+            "- No uses etiquetas HTML\n"
+            "- Usa encabezados, párrafos, listas o llamados a la acción como texto claro\n"
+            "- Al final del contenido, sugiere una estructura HTML (lista con H1, H2, etc.)\n"
+            "- Incluye una meta descripción sugerida (máx 160 caracteres)\n"
+            "- Usa lenguaje claro y natural apropiado para usuarios chilenos"
         ),
         "ctas": (
-            "Genera llamados a la acción (CTAs) claros, inclusivos y persuasivos para un sitio público sobre: {tema}.\n"
-            "No uses etiquetas HTML."
+            "Genera llamados a la acción (CTAs) persuasivos en castellano chileno para un sitio público sobre: {tema}.\n"
+            "No uses etiquetas HTML. Usa un estilo claro y directo."
         ),
         "uxscript": (
-            "Redacta microcopys UX breves y efectivos para una interfaz pública sobre: {tema}.\n"
+            "Redacta microcopys UX breves y efectivos en castellano chileno para una interfaz pública sobre: {tema}.\n"
             "No uses etiquetas HTML."
         )
     }
@@ -62,8 +59,8 @@ def generar_contenido():
 
     if kp or ks:
         prompt += (
-            "\n\nIntegrá las siguientes palabras clave de forma coherente y contextualizada en el texto, "
-            "como parte de frases naturales relacionadas con el tema. No las fuerces:"
+            "\n\nIntegrá las siguientes palabras clave de forma coherente y contextualizada, "
+            "como parte de frases naturales relacionadas con el tema:"
         )
         if kp:
             prompt += f"\n- Principales: {', '.join(kp)}"
