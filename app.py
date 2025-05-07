@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from flask_cors import CO
+from flask_cors import CORS
 from openai import OpenAI
 
 app = Flask(__name__)
@@ -34,10 +34,9 @@ def generar_contenido():
         return jsonify({"error": "Faltan el tipo o tema"}), 400
 
     prompt_base = {
-        "landing": "Redacta una landing page con enfoque UX para marketing digital sobre: {tema}.",
-        "email": "Escribe un email de marketing digital claro y persuasivo sobre: {tema}.",
-        "post": "Genera un post atractivo para redes sociales sobre: {tema}.",
-        "uxscript": "Redacta microtextos UX útiles para una interfaz digital sobre: {tema}."
+        "landing": "Redacta una landing page con enfoque UX para un sitio público sobre: {tema}.",
+        "ctas": "Genera llamados a la acción (CTAs) claros, inclusivos y persuasivos para un sitio público sobre: {tema}.",
+        "uxscript": "Redacta microcopys UX breves y efectivos para una interfaz pública sobre: {tema}."
     }
 
     prompt = prompt_base.get(tipo)
