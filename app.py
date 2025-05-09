@@ -14,6 +14,8 @@ def ask_gpt(prompt, texto):
             messages=[
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": texto}
+            ] if texto else [
+                {"role": "user", "content": prompt}
             ],
             temperature=0.7,
             max_tokens=800
@@ -25,6 +27,14 @@ def ask_gpt(prompt, texto):
 @app.route('/', methods=['POST'])
 def generar_contenido():
     data = request.get_json()
+
+    # 🆕 Soporte para prompt personalizado
+    prompt_directo = data.get("prompt", "").strip()
+    if prompt_directo:
+        contenido = ask_gpt(prompt_directo, "")
+        return jsonify({"contenido": contenido})
+
+    # 🧱 Soporte estructurado
     tipo = data.get("tipo", "").strip().lower()
     tema = data.get("tema", "").strip()
     kp = data.get("keywords_principales", [])
@@ -57,6 +67,8 @@ def generar_contenido():
     if not prompt:
         return jsonify({"error": "Tipo no válido"}), 400
 
+    prompt = prompt.format(tema=tema)
+
     if kp or ks:
         prompt += (
             "\n\nIntegrá las siguientes palabras clave de forma coherente y contextualizada, "
@@ -69,7 +81,6 @@ def generar_contenido():
 
     contenido = ask_gpt(prompt, tema)
     return jsonify({"contenido": contenido})
-
 
 @app.route('/sugerencia', methods=['POST'])
 def sugerencia_parrafo():
