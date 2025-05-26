@@ -1,6 +1,6 @@
 from flask import Flask, jsonify
-import json
 import os
+import json
 from datetime import datetime
 from scraper import obtener_todas_las_noticias
 from resumen_gpt import resumir_noticia
@@ -16,10 +16,12 @@ def noticias_json():
     fecha = datetime.now().strftime("%Y-%m-%d")
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     path = os.path.join(BASE_DIR, f"data/noticias_{fecha}.json")
+
     if os.path.exists(path):
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
         return jsonify(data)
+
     return jsonify({"error": "No hay noticias generadas hoy"}), 404
 
 def procesar_y_guardar():
@@ -32,10 +34,9 @@ def procesar_y_guardar():
         n['resumen'] = resumen if resumen else "[Error al resumir]"
         noticias_con_resumen.append(n)
 
-    # Asegura que el directorio data/ exista
     os.makedirs("data", exist_ok=True)
+    nombre_archivo = os.path.join("data", f"noticias_{datetime.now().strftime('%Y-%m-%d')}.json")
 
-    nombre_archivo = f"data/noticias_{datetime.now().strftime('%Y-%m-%d')}.json"
     with open(nombre_archivo, 'w', encoding='utf-8') as f:
         json.dump(noticias_con_resumen, f, ensure_ascii=False, indent=2)
 
