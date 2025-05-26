@@ -9,19 +9,22 @@ def scrape_df_api():
     if response.status_code == 200:
         try:
             data = response.json()
-            print(f"🔍 Cantidad de noticias encontradas: {len(data)}")  # Debug en logs
+            print(f"🔍 JSON cargado correctamente. Total items en data: {len(data)}")  # log de verificación
 
             fecha = datetime.now().strftime("%Y-%m-%d")
 
-            for item in data[:5]:  # Solo los primeros 5
+            for i, item in enumerate(data[:5]):  # puedes quitar el [:5] para traer más
                 titulo = item.get("title", "Sin título")
                 bajada = item.get("excerpt", "")
+                print(f"📌 Noticia {i+1}: {titulo}")  # muestra cada titular
+
                 noticias.append({
                     "medio": "df",
                     "fecha": fecha,
                     "titular": titulo.strip(),
                     "bajada": bajada.strip()
                 })
+
         except Exception as e:
             print(f"❌ Error al parsear JSON: {e}")
     else:
