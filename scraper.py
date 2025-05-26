@@ -7,18 +7,25 @@ def scrape_df_api():
     noticias = []
 
     if response.status_code == 200:
-        data = response.json()
-        fecha = datetime.now().strftime("%Y-%m-%d")
+        try:
+            data = response.json()
+            print(f"🔍 Cantidad de noticias encontradas: {len(data)}")  # Debug en logs
 
-        for item in data[:5]:  # Solo las primeras 5 noticias
-            titulo = item.get("title", "Sin título")
-            bajada = item.get("excerpt", "")
-            noticias.append({
-                "medio": "df",
-                "fecha": fecha,
-                "titular": titulo.strip(),
-                "bajada": bajada.strip()
-            })
+            fecha = datetime.now().strftime("%Y-%m-%d")
+
+            for item in data[:5]:  # Solo los primeros 5
+                titulo = item.get("title", "Sin título")
+                bajada = item.get("excerpt", "")
+                noticias.append({
+                    "medio": "df",
+                    "fecha": fecha,
+                    "titular": titulo.strip(),
+                    "bajada": bajada.strip()
+                })
+        except Exception as e:
+            print(f"❌ Error al parsear JSON: {e}")
+    else:
+        print(f"❌ Error HTTP: {response.status_code}")
 
     return noticias
 
