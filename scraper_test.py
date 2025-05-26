@@ -7,23 +7,32 @@ HEADERS = {
     "Referer": "https://www.google.com/"
 }
 
-def test_scrape_df():
+def test_scrape_df_html():
     url = "https://www.df.cl/"
     response = requests.get(url, headers=HEADERS)
+
+    if response.status_code != 200:
+        print(f"❌ Error al obtener HTML: {response.status_code}")
+        return
+
     html = response.text
 
-    print("▶ HTML recibido (primeros 1000 caracteres):\n")
+    # Guarda una copia del HTML para inspección
+    with open("df_raw.html", "w", encoding="utf-8") as f:
+        f.write(html)
+
+    print(f"✅ HTML guardado como df_raw.html (primeros 1000 caracteres):\n")
     print(html[:1000])
-    print("\n✅ Longitud total del HTML:", len(html))
 
     soup = BeautifulSoup(html, "html.parser")
-    noticias = soup.select("article.highlight__news")
 
-    print("\n📰 Total de elementos encontrados con 'article.highlight__news':", len(noticias))
+    # Intentamos encontrar bloques de noticias visibles sin JS
+    blocks = soup.select("article.highlight__news, .news-card, h3 a")
 
-    for i, item in enumerate(noticias[:3]):
-        titulo_tag = item.select_one(".highlight__title")
-        print(f"\n{i+1}) Título:", titulo_tag.get_text(strip=True) if titulo_tag else "No encontrado")
+    print(f"\n🔍 Total de posibles noticias detectadas: {len(blocks)}\n")
+
+    for i, b in enumerate(blocks[:5]):
+        print(f"{i+1}) {b.get_text(strip=True)}")
 
 if __name__ == "__main__":
-    test_scrape_df()
+    test_scrape_df_html()
