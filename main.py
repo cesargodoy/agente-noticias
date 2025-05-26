@@ -1,5 +1,5 @@
 from flask import Flask, jsonify
-from flask_cors import CORS  # 👈 Habilitamos CORS
+from flask_cors import CORS
 import os
 import json
 from datetime import datetime
@@ -7,7 +7,7 @@ from scraper import obtener_todas_las_noticias
 from resumen_gpt import resumir_noticia
 
 app = Flask(__name__)
-CORS(app, origins=["https://03.cl"])  # 👈 Tu dominio en HostGator
+CORS(app, origins=["https://03.cl"])  # Permite llamadas desde tu frontend
 
 @app.route("/")
 def home():
@@ -40,10 +40,16 @@ def procesar_y_guardar():
     data_dir = os.path.join(BASE_DIR, "data")
     os.makedirs(data_dir, exist_ok=True)
 
-    nombre_archivo = os.path.join(data_dir, f"noticias_{datetime.now().strftime('%Y-%m-%d')}.json")
+    fecha_actual = datetime.now()
+    nombre_archivo = os.path.join(data_dir, f"noticias_{fecha_actual.strftime('%Y-%m-%d')}.json")
+
+    salida = {
+        "ultima_actualizacion": fecha_actual.strftime("%Y-%m-%d %H:%M"),
+        "noticias": noticias_con_resumen
+    }
 
     with open(nombre_archivo, 'w', encoding='utf-8') as f:
-        json.dump(noticias_con_resumen, f, ensure_ascii=False, indent=2)
+        json.dump(salida, f, ensure_ascii=False, indent=2)
 
     print(f"✅ Archivo guardado: {nombre_archivo}")
 
