@@ -1,32 +1,25 @@
 import os
 import openai
 
-# Carga la clave desde variables de entorno (asegúrate de definir OPENAI_API_KEY en Render)
+# Asegúrate de que esta línea esté presente
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-def resumir_noticia(titulo, bajada):
-    prompt = f"""
-Eres un asistente que resume noticias para un dashboard informativo. Resume la siguiente noticia en un solo párrafo breve, claro y objetivo:
-
-Título: {titulo}
-Bajada: {bajada}
-
-Resumen:"""
-
+def resumir_noticia(titular, bajada):
     try:
-        respuesta = openai.ChatCompletion.create(
-            model="gpt-4-0613",  # También puedes usar "gpt-3.5-turbo" si prefieres menor costo
+        mensaje = f"Titular: {titular}\nBajada: {bajada}\n\nResume esta noticia en máximo 3 líneas, en español, con lenguaje claro."
+
+        response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "Eres un asistente experto en resumir noticias."},
-                {"role": "user", "content": prompt}
+                {"role": "system", "content": "Eres un periodista que redacta resúmenes breves y claros."},
+                {"role": "user", "content": mensaje}
             ],
-            max_tokens=150,
-            temperature=0.7
+            temperature=0.7,
+            max_tokens=100
         )
-        resumen = respuesta['choices'][0]['message']['content'].strip()
-        return resumen
+
+        return response.choices[0].message.content.strip()
 
     except Exception as e:
         print(f"Error al generar resumen: {e}")
-        return None
-
+        return ""
