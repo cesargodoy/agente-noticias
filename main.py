@@ -1,4 +1,5 @@
 from flask import Flask, jsonify
+from flask_cors import CORS  # 👈 Habilitamos CORS
 import os
 import json
 from datetime import datetime
@@ -6,10 +7,11 @@ from scraper import obtener_todas_las_noticias
 from resumen_gpt import resumir_noticia
 
 app = Flask(__name__)
+CORS(app, origins=["https://03.cl"])  # 👈 Tu dominio en HostGator
 
 @app.route("/")
 def home():
-    return "API de Noticias funcionando"
+    return "✅ API de Noticias funcionando"
 
 @app.route("/api/noticias", methods=["GET"])
 def noticias_json():
