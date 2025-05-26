@@ -15,7 +15,7 @@ def home():
 def noticias_json():
     fecha = datetime.now().strftime("%Y-%m-%d")
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    path = os.path.join(BASE_DIR, f"data/noticias_{fecha}.json")
+    path = os.path.join(BASE_DIR, "data", f"noticias_{fecha}.json")
 
     if os.path.exists(path):
         with open(path, "r", encoding="utf-8") as f:
@@ -34,8 +34,11 @@ def procesar_y_guardar():
         n['resumen'] = resumen if resumen else "[Error al resumir]"
         noticias_con_resumen.append(n)
 
-    os.makedirs("data", exist_ok=True)
-    nombre_archivo = os.path.join("data", f"noticias_{datetime.now().strftime('%Y-%m-%d')}.json")
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.join(BASE_DIR, "data")
+    os.makedirs(data_dir, exist_ok=True)
+
+    nombre_archivo = os.path.join(data_dir, f"noticias_{datetime.now().strftime('%Y-%m-%d')}.json")
 
     with open(nombre_archivo, 'w', encoding='utf-8') as f:
         json.dump(noticias_con_resumen, f, ensure_ascii=False, indent=2)
