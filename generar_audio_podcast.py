@@ -3,7 +3,15 @@ import json
 from datetime import datetime
 from gtts import gTTS
 
-INTRODUCCION = "Bienvenidos al resumen diario de noticias del Diario Financiero y Emol. A continuación, los titulares y sus respectivos resúmenes."
+INTRODUCCION = (
+    "Bienvenidos al resumen diario de noticias del Diario Financiero y Emol, "
+    "por parte de la vicepresidencia de Marketing y Estudios."
+)
+
+CIERRE = (
+    "Muchas gracias por escuchar el resumen diario de noticias "
+    "de la Vicepresidencia de Marketing y estudios."
+)
 
 def cargar_noticias():
     fecha = datetime.now().strftime("%Y-%m-%d")
@@ -19,6 +27,7 @@ def construir_guion(noticias):
     bloques = [INTRODUCCION]
     for i, n in enumerate(noticias, 1):
         bloques.append(f"Noticia {i}: {n['titular']}. {n['resumen']}")
+    bloques.append(CIERRE)
     return "\n\n".join(bloques)
 
 def generar_audio(texto, filename="resumen_podcast.mp3"):
