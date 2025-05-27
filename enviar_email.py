@@ -19,7 +19,7 @@ def obtener_archivos():
             contenido = base64.b64encode(f.read()).decode()
             archivos.append({
                 "content": contenido,
-                "name": f"noticias_{fecha}.json"
+                "name": f"noticias_{fecha}.txt"  # ✅ Renombrado a .txt
             })
 
     if os.path.exists(audio_path):
@@ -43,7 +43,7 @@ def enviar_email():
         "sender": {"name": "Resumen Noticias", "email": "no-reply@03.cl"},
         "to": [{"email": DESTINATARIO}],
         "subject": "Resumen diario de noticias",
-        "htmlContent": "<p>Adjuntamos el resumen de noticias del día en formato JSON y audio MP3.</p>",
+        "htmlContent": "<p>Adjuntamos el resumen de noticias del día en formato TXT y audio MP3.</p>",
         "attachment": archivos
     }
 
