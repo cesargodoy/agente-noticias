@@ -105,6 +105,12 @@ def procesar_y_guardar():
     except Exception as e:
         escribir_log(f"❌ Error al generar podcast: {e}")
 
+    try:
+        subprocess.run(["python", "enviar_email.py"], check=True)
+        escribir_log("📬 Email enviado correctamente.")
+    except Exception as e:
+        escribir_log(f"❌ Error al enviar email: {e}")
+
 if __name__ == "__main__":
     procesar_y_guardar()
     app.run(host="0.0.0.0", port=10000)
