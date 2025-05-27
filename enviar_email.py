@@ -5,7 +5,6 @@ from datetime import datetime
 import base64
 
 API_KEY = os.getenv("BREVO_API_KEY")
-DESTINATARIO = os.getenv("DESTINATARIO")
 
 def obtener_archivos():
     fecha = datetime.now().strftime("%Y-%m-%d")
@@ -19,7 +18,7 @@ def obtener_archivos():
             contenido = base64.b64encode(f.read()).decode()
             archivos.append({
                 "content": contenido,
-                "name": f"noticias_{fecha}.txt"  # Renombrado para evitar error
+                "name": f"noticias_{fecha}.txt"
             })
 
     if os.path.exists(audio_path):
@@ -33,18 +32,19 @@ def obtener_archivos():
     return archivos
 
 def enviar_email():
-    if not API_KEY or not DESTINATARIO:
-        raise Exception("BREVO_API_KEY o DESTINATARIO no configurados.")
+    if not API_KEY:
+        raise Exception("BREVO_API_KEY no configurado.")
 
     url = "https://api.brevo.com/v3/smtp/email"
     archivos = obtener_archivos()
 
     data = {
-        "sender": {
-            "name": "Resumen Noticias",
-            "email": "cgodoy@gmail.com"  # ✅ Remitente verificado
-        },
-        "to": [{"email": DESTINATARIO}],
+        "sender": {"name": "Resumen Noticias", "email": "cgodoy@gmail.com"},
+        "to": [
+            {"email": "cesar@03.cl"},
+            {"email": "francisco.opazo75@gmail.com"},
+            {"email": "cgodoy@gmail.com"}
+        ],
         "subject": "Resumen diario de noticias",
         "htmlContent": "<p>Adjuntamos el resumen de noticias del día en formato TXT y audio MP3.</p>",
         "attachment": archivos
