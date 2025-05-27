@@ -101,7 +101,7 @@ def procesar_y_guardar():
 
     try:
         subprocess.run(["python", "generar_audio_podcast.py"], check=True)
-        escribir_log("🎧 Audio podcast generado correctamente.")
+        escribir_log("🎧 Audio podcast generado correctamente (OpenAI TTS).")
     except Exception as e:
         escribir_log(f"❌ Error al generar podcast: {e}")
 
