@@ -40,8 +40,6 @@ def scrape_noticia_df(url, fecha_iso):
     soup = BeautifulSoup(response.text, "html.parser")
 
     titular = soup.find("h1").get_text(strip=True) if soup.find("h1") else "Sin título"
-    
-    # Intentar bajada desde meta o h2
     meta_desc = soup.find("meta", attrs={"name": "description"})
     bajada = meta_desc["content"].strip() if meta_desc else ""
     if not bajada:
@@ -58,34 +56,53 @@ def scrape_noticia_df(url, fecha_iso):
         "url": url
     }
 
-def scrape_emol_rss(limit=5):
-    url = "https://www.emol.com/rss/ultimasnoticias.xml"
-    emol_headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
-    }
-
-    response = requests.get(url, headers=emol_headers)
+def scrape_emol_html(limit=5):
+    url = "https://www.emol.com/"
+    response = requests.get(url, headers=HEADERS)
 
     if response.status_code != 200:
-        print(f"❌ Error al obtener RSS Emol: {response.status_code}")
+        print(f"❌ Error al acceder a Emol: {response.status_code}")
         return []
 
-    feed = feedparser.parse(response.content)
+    soup = BeautifulSoup(response.text, "html.parser")
+    titulares = soup.select("h3 a[href*='/noticias/']")
+
     noticias = []
     fecha = datetime.now().strftime("%Y-%m-%d")
 
-    for entry in feed.entries[:limit]:
+    for i, link in enumerate(titulares[:limit]):
+        titulo = link.get_text(strip=True)
+        href = "https://www.emol.com" + link["href"]
+
+        try:
+            bajada = obtener_bajada_emol(href)
+        except Exception as e:
+            print(f"⚠️ Error al acceder a noticia Emol: {e}")
+            bajada = ""
+
         noticias.append({
             "medio": "emol",
             "fecha": fecha,
-            "titular": entry.title.strip(),
-            "bajada": entry.description.strip(),
-            "url": entry.link.strip()
+            "titular": titulo,
+            "bajada": bajada,
+            "url": href
         })
 
+    print(f"✅ Se extrajeron {len(noticias)} titulares desde Emol")
     return noticias
+
+def obtener_bajada_emol(url):
+    response = requests.get(url, headers=HEADERS)
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    meta = soup.find("meta", attrs={"name": "description"})
+    if meta and meta.get("content"):
+        return meta["content"].strip()
+
+    h2 = soup.find("h2")
+    return h2.get_text(strip=True) if h2 else ""
 
 def obtener_todas_las_noticias():
     noticias_df = scrape_df_sitemap(limit=5)
-    noticias_emol = scrape_emol_rss(limit=5)
+    noticias_emol = scrape_emol_html(limit=5)
     return noticias_df + noticias_emol
