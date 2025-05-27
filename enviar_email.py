@@ -43,7 +43,7 @@ def enviar_email():
         "to": [
             {"email": "cesar@03.cl"},
             {"email": "francisco.opazo75@gmail.com"},
-            {"email": "cgodoy@gmail.com"}
+            {"email": "fernando.larrain@gmail.com"}
         ],
         "subject": "Resumen diario de noticias",
         "htmlContent": "<p>Adjuntamos el resumen de noticias del día en formato TXT y audio MP3.</p>",
