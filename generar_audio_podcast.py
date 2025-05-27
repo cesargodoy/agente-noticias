@@ -1,7 +1,10 @@
 import os
 import json
 from datetime import datetime
-from gtts import gTTS
+import openai
+
+# Tu clave debe estar cargada como variable de entorno en Render
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 INTRODUCCION = (
     "Bienvenidos al resumen diario de noticias del Diario Financiero y Emol, "
@@ -30,15 +33,20 @@ def construir_guion(noticias):
     bloques.append(CIERRE)
     return "\n\n".join(bloques)
 
-def generar_audio(texto, filename="resumen_podcast.mp3"):
-    tts = gTTS(text=texto, lang='es')
-    tts.save(filename)
+def generar_audio_openai(texto, filename="resumen_podcast.mp3"):
+    response = openai.audio.speech.create(
+        model="tts-1",
+        voice="alloy",  # También puedes probar: "nova", "shimmer", "fable", "onyx", "echo"
+        input=texto
+    )
+    with open(filename, "wb") as f:
+        f.write(response.content)
     print(f"🎧 Audio guardado como: {filename}")
 
 if __name__ == "__main__":
     noticias = cargar_noticias()
     if noticias:
         guion = construir_guion(noticias)
-        generar_audio(guion)
+        generar_audio_openai(guion)
     else:
         print("⚠️ No hay noticias disponibles para generar audio.")
