@@ -5,3 +5,4 @@ flask
 gunicorn
 flask-cors
 gTTS
+sendgrid
