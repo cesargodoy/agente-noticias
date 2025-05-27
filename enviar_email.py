@@ -51,11 +51,9 @@ def enviar_email():
         html_content=Content("text/html", html_content)
     )
 
-    # Adjuntar archivo de audio
     if os.path.exists("resumen_podcast.mp3"):
         message.add_attachment(adjuntar_archivo("resumen_podcast.mp3", "audio/mpeg"))
 
-    # Adjuntar JSON de noticias
     json_path = f"data/noticias_{fecha}.json"
     if os.path.exists(json_path):
         message.add_attachment(adjuntar_archivo(json_path, "application/json"))
